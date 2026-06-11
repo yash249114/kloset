@@ -56,8 +56,18 @@ func (h *Handler) ListOutfitReviews(c *fiber.Ctx) error {
 	return response.Paginated(c, reviews, page, perPage, total)
 }
 
+func (h *Handler) ListAll(c *fiber.Ctx) error {
+	limit, _ := strconv.Atoi(c.Query("limit", "10"))
+	reviews, err := h.service.ListAll(limit)
+	if err != nil {
+		return response.InternalError(c, err.Error())
+	}
+	return response.Success(c, "Reviews fetched successfully", reviews)
+}
+
 func (h *Handler) RegisterRoutes(router fiber.Router, authMiddleware fiber.Handler) {
 	reviews := router.Group("/reviews")
 	reviews.Post("/", authMiddleware, h.Create)
+	reviews.Get("/", h.ListAll)
 	reviews.Get("/outfit/:outfitId", h.ListOutfitReviews)
 }

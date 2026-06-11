@@ -4,6 +4,8 @@ import Navbar from '@/components/layout/Navbar';
 import Footer from '@/components/layout/Footer';
 import { Toaster } from 'sonner';
 import SupportWidget from '@/components/support/SupportWidget';
+import GoogleProvider from '@/components/providers/GoogleProvider';
+import { CSPostHogProvider } from '@/components/providers/PostHogProvider';
 
 export const metadata: Metadata = {
   title: 'Kloset — Rent Designer Outfits',
@@ -36,19 +38,24 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body>
-        <Navbar />
-        <main style={{ paddingTop: 'var(--nav-height)' }}>
-          {children}
-        </main>
-        <Footer />
-        <Toaster
-          position="top-right"
-          toastOptions={{
-            style: { fontFamily: 'var(--font-body)' },
-          }}
-        />
-        <SupportWidget />
+        <CSPostHogProvider>
+          <GoogleProvider>
+            <Navbar />
+            <main style={{ paddingTop: 'var(--nav-height)' }}>
+              {children}
+            </main>
+            <Footer />
+            <Toaster
+              position="top-right"
+              toastOptions={{
+                style: { fontFamily: 'var(--font-body)' },
+              }}
+            />
+            <SupportWidget />
+          </GoogleProvider>
+        </CSPostHogProvider>
       </body>
     </html>
   );
 }
+

@@ -13,6 +13,23 @@ export interface User {
   wallet_balance: number;
   trust_score: number;
   created_at: string;
+  date_of_birth?: string | null;
+  gender?: string | null;
+  payment_preferences?: string | null;
+  business_name?: string | null;
+  business_address?: string | null;
+  pickup_address?: string | null;
+  return_address?: string | null;
+  gst_details?: string | null;
+  pan_details?: string | null;
+  bank_details?: string | null;
+  payout_account?: string | null;
+  kyc_documents?: string | null;
+  store_banner?: string | null;
+  store_logo?: string | null;
+  business_description?: string | null;
+  support_contact?: string | null;
+  rental_policies?: string | null;
 }
 
 export type UserRole = 'renter' | 'seller' | 'admin';

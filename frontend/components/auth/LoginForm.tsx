@@ -10,6 +10,8 @@ import { useRouter } from 'next/navigation';
 import { useAuthStore } from '@/stores/auth.store';
 import { authAPI } from '@/lib/api/auth';
 import { Eye, EyeOff, Mail, Lock, ArrowRight } from 'lucide-react';
+import { GoogleLogin } from '@react-oauth/google';
+import posthog from 'posthog-js';
 
 const loginSchema = z.object({
   email: z.string().email('Please enter a valid email'),
@@ -25,6 +27,30 @@ export default function LoginForm() {
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
 
+  const handleGoogleSuccess = async (credentialResponse: any) => {
+    try {
+      setIsLoading(true);
+      setError(null);
+      const result = await authAPI.googleLogin({ credential: credentialResponse.credential || '' });
+      setAuth(result.user, result.access_token, result.refresh_token);
+      
+      // Track login event
+      posthog.capture('login', { method: 'google', role: result.user.role, email: result.user.email });
+      
+      const redirectMap: Record<string, string> = {
+        renter: '/',
+        seller: '/seller/dashboard',
+        admin: '/admin/dashboard',
+      };
+      router.push(redirectMap[result.user.role] || '/');
+    } catch (err: unknown) {
+      const error = err as { response?: { data?: { error?: string } } };
+      setError(error.response?.data?.error || 'Google Login failed. Please try again.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const {
     register,
     handleSubmit,
@@ -39,6 +65,10 @@ export default function LoginForm() {
       setError(null);
       const result = await authAPI.login(data);
       setAuth(result.user, result.access_token, result.refresh_token);
+      
+      // Track login event
+      posthog.capture('login', { method: 'email', role: result.user.role, email: result.user.email });
+
       // Redirect based on role
       const redirectMap: Record<string, string> = {
         renter: '/',
@@ -197,6 +227,27 @@ export default function LoginForm() {
             )}
           </motion.button>
         </form>
+
+        {/* Divider */}
+        <div className="relative my-6">
+          <div className="absolute inset-0 flex items-center">
+            <div className="w-full border-t border-[var(--petal)]"></div>
+          </div>
+          <div className="relative flex justify-center text-xs uppercase">
+            <span className="bg-white px-3 text-[var(--ink-lighter)] font-mono">Or continue with</span>
+          </div>
+        </div>
+
+        {/* Google OAuth Button */}
+        <div className="flex justify-center w-full">
+          <GoogleLogin
+            onSuccess={handleGoogleSuccess}
+            onError={() => setError('Google Sign-in failed. Please try again.')}
+            useOneTap
+            shape="pill"
+            width="320px"
+          />
+        </div>
 
         {/* Register link */}
         <p className="text-center mt-6 text-sm" style={{ color: 'var(--ink-lighter)' }}>

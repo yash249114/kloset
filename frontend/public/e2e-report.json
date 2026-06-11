@@ -1,5 +1,5 @@
 {
-  "timestamp": "2026-06-08T17:24:05.122Z",
+  "timestamp": "2026-06-11T06:34:34.576Z",
   "overallScore": 100,
   "testsRun": 31,
   "testsPassed": 31,
@@ -23,7 +23,7 @@
       {
         "name": "Renter Raises Booking Dispute",
         "passed": true,
-        "notes": "Dispute ID: f03e6ae0-0287-4784-9088-44d6651275ec"
+        "notes": "Dispute ID: 4b56221c-123c-47e3-90e5-2bf11fd0c61b"
       },
       {
         "name": "Admin Resolves Dispute (Dismiss Fee)",
@@ -55,7 +55,7 @@
       {
         "name": "Create Listing Form Draft",
         "passed": true,
-        "notes": "Outfit ID: 5df1d145-8fff-4d2f-8919-9f19da42aeba"
+        "notes": "Outfit ID: 23d8e380-6c7b-4cab-9dc6-98381f5ee31c"
       },
       {
         "name": "Submit Listing for Verification",
@@ -92,7 +92,7 @@
       {
         "name": "Browse Catalog",
         "passed": true,
-        "notes": "Picked Outfit ID: 5df1d145-8fff-4d2f-8919-9f19da42aeba"
+        "notes": "Picked Outfit ID: 23d8e380-6c7b-4cab-9dc6-98381f5ee31c"
       },
       {
         "name": "Add Item to Wishlist",
@@ -102,7 +102,7 @@
       {
         "name": "Add to Cart & Checkout (Draft Booking)",
         "passed": true,
-        "notes": "Booking ID: 388004c4-d057-4ed5-abcc-087e7cff0446"
+        "notes": "Booking ID: c0c3934a-47fc-4ce8-b591-33f34ad943fb"
       },
       {
         "name": "Razorpay Payment & Signature Verification",
@@ -129,7 +129,7 @@
       {
         "name": "Create Customer Support Ticket",
         "passed": true,
-        "notes": "Ticket ID: TKT-6100"
+        "notes": "Ticket ID: TKT-16434700"
       },
       {
         "name": "Admin View Tickets List",

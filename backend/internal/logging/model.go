@@ -18,3 +18,15 @@ type SystemLog struct {
 func (SystemLog) TableName() string {
 	return "system_logs"
 }
+
+// AICache represents the ai_cache table
+type AICache struct {
+	Key       string    `gorm:"size:255;primaryKey"`
+	Response  string    `gorm:"type:text;not null"`
+	ExpiresAt time.Time `gorm:"not null;index"`
+}
+
+// TableName specifies the table name for AICache
+func (AICache) TableName() string {
+	return "ai_cache"
+}

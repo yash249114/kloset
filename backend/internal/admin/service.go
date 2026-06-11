@@ -484,7 +484,7 @@ func (s *Service) GetAIOpsStats() (map[string]interface{}, error) {
 			"memory_usage_mb":   248.5,
 			"active_db_pools":   activeConnections,
 			"uptime_seconds":    86400,
-			"redis_status":      "online",
+			"redis_status":      "disabled",
 			"status":            "healthy",
 			"health_score":      math.Round(healthScore*10) / 10,
 		},

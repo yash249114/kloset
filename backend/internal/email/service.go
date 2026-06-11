@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/getsentry/sentry-go"
 	"github.com/google/uuid"
 	"github.com/kloset/backend/internal/config"
 	"github.com/rs/zerolog/log"
@@ -41,12 +42,16 @@ func (s *Service) send(toEmail, subject, htmlContent string) error {
 	attempts := 1
 	var lastErr string
 
-	// Attempt sending email via HTTP dispatch
 	err := s.dispatch(toEmail, subject, htmlContent)
 	status := "sent"
 	if err != nil {
 		status = "retry_pending"
 		lastErr = err.Error()
+		sentry.WithScope(func(scope *sentry.Scope) {
+			scope.SetTag("to_email", toEmail)
+			scope.SetTag("subject", subject)
+			sentry.CaptureException(err)
+		})
 	}
 
 	// Log to database
@@ -70,6 +75,26 @@ func (s *Service) send(toEmail, subject, htmlContent string) error {
 		}
 		if dbErrStr := s.db.Create(emailLog).Error; dbErrStr != nil {
 			log.Error().Err(dbErrStr).Msg("Failed to save email log to database")
+		}
+
+		// If failed, insert into the active email_queue
+		if err != nil {
+			queueItem := &EmailQueue{
+				ID:         uuid.New(),
+				EmailLogID: logID,
+				ToEmail:    toEmail,
+				Subject:    subject,
+				HTML:       htmlContent,
+				Attempts:   attempts,
+				CreatedAt:  time.Now(),
+				UpdatedAt:  time.Now(),
+			}
+			if lastErr != "" {
+				queueItem.LastError = &lastErr
+			}
+			if queueErr := s.db.Create(queueItem).Error; queueErr != nil {
+				log.Error().Err(queueErr).Msg("Failed to save to email queue")
+			}
 		}
 	}
 
@@ -129,10 +154,10 @@ func (s *Service) StartRetryWorker() {
 	ticker := time.NewTicker(30 * time.Second)
 	go func() {
 		for range ticker.C {
-			var pendingEmails []EmailLog
-			err := s.db.Where("status = ?", "retry_pending").Find(&pendingEmails).Error
+			var pendingEmails []EmailQueue
+			err := s.db.Find(&pendingEmails).Error
 			if err != nil {
-				log.Error().Err(err).Msg("Email retry worker failed to fetch pending logs")
+				log.Error().Err(err).Msg("Email retry worker failed to fetch pending queue logs")
 				continue
 			}
 
@@ -140,27 +165,43 @@ func (s *Service) StartRetryWorker() {
 				continue
 			}
 
-			log.Info().Int("count", len(pendingEmails)).Msg("Email retry worker processing pending emails")
+			log.Info().Int("count", len(pendingEmails)).Msg("Email retry worker processing pending emails from queue")
 
 			for _, emailItem := range pendingEmails {
 				emailItem.Attempts++
 				err := s.dispatch(emailItem.ToEmail, emailItem.Subject, emailItem.HTML)
 				if err == nil {
-					emailItem.Status = "sent"
-					emailItem.LastError = nil
+					// 1. Update main email_logs table status to "sent"
+					s.db.Model(&EmailLog{}).Where("id = ?", emailItem.EmailLogID).Updates(map[string]interface{}{
+						"status":     "sent",
+						"attempts":   emailItem.Attempts,
+						"last_error": nil,
+						"updated_at": time.Now(),
+					})
+					// 2. Delete from active queue
+					s.db.Delete(&emailItem)
 				} else {
 					errStr := err.Error()
 					emailItem.LastError = &errStr
+					emailItem.UpdatedAt = time.Now()
+
+					// Update main email_logs table attempts and error
+					s.db.Model(&EmailLog{}).Where("id = ?", emailItem.EmailLogID).Updates(map[string]interface{}{
+						"attempts":   emailItem.Attempts,
+						"last_error": errStr,
+						"updated_at": time.Now(),
+					})
+
 					if emailItem.Attempts >= 3 {
-						emailItem.Status = "failed"
+						// Permanently failed
+						s.db.Model(&EmailLog{}).Where("id = ?", emailItem.EmailLogID).Update("status", "failed")
+						s.db.Delete(&emailItem) // Remove from queue
+						sentry.CaptureMessage(fmt.Sprintf("Email permanently failed to send to %s after 3 attempts: %s", emailItem.ToEmail, emailItem.Subject))
 						log.Error().Str("to", emailItem.ToEmail).Str("subject", emailItem.Subject).Msg("Email failed permanently after 3 attempts")
 					} else {
-						emailItem.Status = "retry_pending"
+						// Update the queue record with new attempt count / error
+						s.db.Save(&emailItem)
 					}
-				}
-				emailItem.UpdatedAt = time.Now()
-				if updateErr := s.db.Save(&emailItem).Error; updateErr != nil {
-					log.Error().Err(updateErr).Msg("Email retry worker failed to update email log")
 				}
 			}
 		}

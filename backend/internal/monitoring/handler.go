@@ -1,26 +1,22 @@
 package monitoring
 
 import (
-	"context"
 	"time"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/kloset/backend/internal/config"
 	"github.com/kloset/backend/pkg/response"
-	"github.com/redis/go-redis/v9"
 	"gorm.io/gorm"
 )
 
 type Handler struct {
 	db  *gorm.DB
-	rdb *redis.Client
 	cfg *config.Config
 }
 
-func NewHandler(db *gorm.DB, rdb *redis.Client, cfg *config.Config) *Handler {
+func NewHandler(db *gorm.DB, cfg *config.Config) *Handler {
 	return &Handler{
 		db:  db,
-		rdb: rdb,
 		cfg: cfg,
 	}
 }
@@ -65,18 +61,6 @@ func (h *Handler) Readyz(c *fiber.Ctx) error {
 		})
 	}
 
-	// 2. Verify Redis (if configured)
-	if h.rdb != nil {
-		ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
-		defer cancel()
-		if err := h.rdb.Ping(ctx).Err(); err != nil {
-			return c.Status(fiber.StatusServiceUnavailable).JSON(fiber.Map{
-				"status": "not ready",
-				"error":  "redis ping failed: " + err.Error(),
-			})
-		}
-	}
-
 	return c.Status(fiber.StatusOK).JSON(fiber.Map{
 		"status":    "ready",
 		"timestamp": time.Now(),
@@ -104,15 +88,6 @@ func (h *Handler) Diagnostics(c *fiber.Ctx) error {
 
 	// 2. Redis Status
 	redisStatus := "disabled"
-	if h.rdb != nil {
-		ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
-		defer cancel()
-		if err := h.rdb.Ping(ctx).Err(); err == nil {
-			redisStatus = "online"
-		} else {
-			redisStatus = "offline: " + err.Error()
-		}
-	}
 
 	// 3. Check Configurations (presence only, secrets masked)
 	apiConfigs := fiber.Map{

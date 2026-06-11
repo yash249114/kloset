@@ -52,3 +52,14 @@ func (r *Repository) UpdateOutfitRating(outfitID uuid.UUID) error {
 		"rating_count": stats.Count,
 	}).Error
 }
+
+func (r *Repository) FindAll(limit int) ([]Review, error) {
+	var reviews []Review
+	err := r.db.Model(&Review{}).
+		Preload("Reviewer").
+		Where("is_visible = true").
+		Order("created_at DESC").
+		Limit(limit).
+		Find(&reviews).Error
+	return reviews, err
+}

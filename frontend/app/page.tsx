@@ -21,6 +21,7 @@ import {
 } from 'lucide-react';
 import OutfitCard from '@/components/outfit/OutfitCard';
 import { outfitsAPI } from '@/lib/api/outfits';
+import { reviewsAPI } from '@/lib/api/reviews';
 import type { Outfit, OutfitCategory } from '@/types';
 
 /* ─── Mock Data ────────────────────────────── */
@@ -141,6 +142,21 @@ export default function Home() {
   const scrollRef = useRef<HTMLDivElement>(null);
   const [outfits, setOutfits] = useState<Outfit[]>([]);
   const [loading, setLoading] = useState(true);
+  const [reviews, setReviews] = useState<any[]>(customerReviews);
+
+  useEffect(() => {
+    async function loadReviews() {
+      try {
+        const liveReviews = await reviewsAPI.listAll(3);
+        if (liveReviews && liveReviews.length > 0) {
+          setReviews(liveReviews);
+        }
+      } catch (err) {
+        console.error('Failed to load live reviews:', err);
+      }
+    }
+    loadReviews();
+  }, []);
 
   const scroll = (dir: 'left' | 'right') => {
     if (!scrollRef.current) return;
@@ -522,43 +538,49 @@ export default function Home() {
             <div className="h-[1px] w-12 bg-[var(--kloset-gold)] mx-auto mt-4" />
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-5xl mx-auto">
-            {customerReviews.map((rev, i) => (
-              <div key={i} className="flex gap-4 p-5 bg-[#fbfaf8] border border-[var(--kloset-border)] rounded-2xl shadow-sm transition-all hover:shadow-md">
-                
-                {/* Worn outfit photo column */}
-                <div className="relative w-20 h-28 rounded-lg overflow-hidden flex-shrink-0 bg-gray-150 border">
-                  <img src={rev.photo} alt={rev.name} className="object-cover w-full h-full" />
-                  <span className="absolute bottom-1 right-1 bg-white/95 backdrop-blur-sm px-1.5 py-0.5 rounded text-[8px] text-[var(--rose-dark)] font-bold scale-90">WEAR</span>
-                </div>
-
-                {/* Testimonial details */}
-                <div className="flex flex-col justify-between flex-1">
-                  <div className="space-y-1.5">
-                    <div className="flex items-center gap-0.5 text-[var(--kloset-gold)]">
-                      {[...Array(5)].map((_, starIdx) => (
-                        <Star key={starIdx} size={11} fill="currentColor" />
-                      ))}
-                      <span className="badge badge-sage uppercase tracking-wider text-[7px] font-bold py-0.2 px-1 ml-1.5 flex items-center gap-0.5">
-                        ✓ verified
-                      </span>
-                    </div>
-                    <p className="text-[11px] text-gray-600 italic leading-relaxed line-clamp-4">"{rev.comment}"</p>
+            {reviews.map((rev, i) => {
+              const reviewerName = rev.reviewer?.name || rev.name || 'Verified Client';
+              const reviewerAvatar = rev.reviewer?.avatar_url || rev.avatar || 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=100&h=100&fit=crop';
+              const rating = rev.rating || 5;
+              const comment = rev.comment || '';
+              const photo = rev.photo || 'https://images.unsplash.com/photo-1583939003579-730e3918a45a?w=150&h=200&fit=crop';
+              const outfitName = rev.outfit?.title || rev.outfit || 'Couture Rental';
+              return (
+                <div key={i} className="flex gap-4 p-5 bg-[#fbfaf8] border border-[var(--kloset-border)] rounded-2xl shadow-sm transition-all hover:shadow-md">
+                  
+                  {/* Worn outfit photo column */}
+                  <div className="relative w-20 h-28 rounded-lg overflow-hidden flex-shrink-0 bg-gray-150 border">
+                    <img src={photo} alt={reviewerName} className="object-cover w-full h-full" />
+                    <span className="absolute bottom-1 right-1 bg-white/95 backdrop-blur-sm px-1.5 py-0.5 rounded text-[8px] text-[var(--rose-dark)] font-bold scale-90">WEAR</span>
                   </div>
-                  <div className="flex items-center gap-2 pt-2 border-t border-[var(--kloset-border)]/50">
-                    <div className="relative w-6 h-6 rounded-full overflow-hidden bg-gray-100 flex-shrink-0">
-                      <img src={rev.avatar} alt={rev.name} className="object-cover w-full h-full" />
+
+                  {/* Testimonial details */}
+                  <div className="flex flex-col justify-between flex-1">
+                    <div className="space-y-1.5">
+                      <div className="flex items-center gap-0.5 text-[var(--kloset-gold)]">
+                        {[...Array(rating)].map((_, starIdx) => (
+                          <Star key={starIdx} size={11} fill="currentColor" />
+                        ))}
+                        <span className="badge badge-sage uppercase tracking-wider text-[7px] font-bold py-0.2 px-1 ml-1.5 flex items-center gap-0.5">
+                          ✓ verified
+                        </span>
+                      </div>
+                      <p className="text-[11px] text-gray-600 italic leading-relaxed line-clamp-4">"{comment}"</p>
                     </div>
-                    <div>
-                      <h4 className="text-[10px] font-bold text-gray-900">{rev.name}</h4>
-                      <p className="text-[8px] text-gray-400 font-mono tracking-wider uppercase">Order: {rev.outfit}</p>
+                    <div className="flex items-center gap-2 pt-2 border-t border-[var(--kloset-border)]/50">
+                      <div className="relative w-6 h-6 rounded-full overflow-hidden bg-gray-100 flex-shrink-0">
+                        <img src={reviewerAvatar} alt={reviewerName} className="object-cover w-full h-full" />
+                      </div>
+                      <div>
+                        <h4 className="text-[10px] font-bold text-gray-900">{reviewerName}</h4>
+                        <p className="text-[8px] text-gray-400 font-mono tracking-wider uppercase">Order: {outfitName}</p>
+                      </div>
                     </div>
                   </div>
-                </div>
 
-              </div>
-            ))}
-          </div>
+                </div>
+              );
+            })}
         </div>
       </section>
 

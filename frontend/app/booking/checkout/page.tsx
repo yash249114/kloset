@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Image from 'next/image';
 import Link from 'next/link';
+import posthog from 'posthog-js';
 import { useRouter } from 'next/navigation';
 import { useCartStore } from '@/stores/cart.store';
 import { useAuthStore } from '@/stores/auth.store';
@@ -291,6 +292,13 @@ export default function CheckoutPage() {
         } as any;
       });
 
+      // Track 'booking created' event
+      posthog.capture('booking created', {
+        booking_id: apiBooking.id,
+        booking_ref: apiBooking.booking_ref,
+        total_amount: apiBooking.total_amount || costs.total,
+      });
+
       const amountInPaise = Math.round(costs.total * 100);
 
       const verifyPaymentOnBackend = async (rzpResponse: any) => {
@@ -303,6 +311,14 @@ export default function CheckoutPage() {
           });
 
           if (verifyRes.data.success) {
+            // Track 'payment completed' event
+            posthog.capture('payment completed', {
+              booking_id: apiBooking.id,
+              booking_ref: apiBooking.booking_ref,
+              total_amount: apiBooking.total_amount || costs.total,
+              payment_id: rzpResponse.razorpay_payment_id,
+            });
+
             setOrderId(apiBooking.booking_ref);
             setOrderDate(new Date().toLocaleDateString('en-IN', { year: 'numeric', month: 'long', day: 'numeric' }));
             setIsProcessing(false);

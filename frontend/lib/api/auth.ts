@@ -12,6 +12,12 @@ export const authAPI = {
     return data.data!;
   },
 
+  googleLogin: async (payload: { credential: string }): Promise<AuthResponse> => {
+    const { data } = await client.post<APIResponse<AuthResponse>>('/auth/google', payload);
+    return data.data!;
+  },
+
+
   refresh: async (refreshToken: string): Promise<AuthResponse> => {
     const { data } = await client.post<APIResponse<AuthResponse>>('/auth/refresh', {
       refresh_token: refreshToken,

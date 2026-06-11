@@ -16,7 +16,8 @@ import (
 	"github.com/kloset/backend/internal/logging"
 	"github.com/kloset/backend/internal/notification"
 	"github.com/kloset/backend/pkg/utils"
-	"github.com/redis/go-redis/v9"
+	"google.golang.org/api/idtoken"
+	"gorm.io/gorm"
 )
 
 // Service handles auth business logic
@@ -25,17 +26,15 @@ type Service struct {
 	config   *config.Config
 	notifSvc *notification.Service
 	logSvc   *logging.Service
-	rdb      *redis.Client
 }
 
 // NewService creates a new auth service
-func NewService(repo *Repository, cfg *config.Config, notifSvc *notification.Service, logSvc *logging.Service, rdb *redis.Client) *Service {
+func NewService(repo *Repository, cfg *config.Config, notifSvc *notification.Service, logSvc *logging.Service) *Service {
 	return &Service{
 		repo:     repo,
 		config:   cfg,
 		notifSvc: notifSvc,
 		logSvc:   logSvc,
-		rdb:      rdb,
 	}
 }
 
@@ -262,48 +261,34 @@ func (s *Service) GoogleLogin(req *GoogleLoginRequest) (*AuthResponse, error) {
 		name = "E2E Google User"
 		googleVerified = true
 	} else {
-		// Production-grade verification
-		// 1. Parse token without validation first to read claims
-		token, _, err := new(jwt.Parser).ParseUnverified(req.Credential, jwt.MapClaims{})
-		if err != nil {
-			return nil, fmt.Errorf("failed to parse Google token: %w", err)
-		}
-
-		claims, ok := token.Claims.(jwt.MapClaims)
-		if !ok {
-			return nil, errors.New("invalid google token claims type")
-		}
-
-		// 2. Validate issuer
-		iss, _ := claims["iss"].(string)
-		if iss != "https://accounts.google.com" && iss != "accounts.google.com" {
-			return nil, errors.New("invalid token issuer")
-		}
-
-		// 3. Validate audience (verify against GOOGLE_CLIENT_ID)
-		aud, _ := claims["aud"].(string)
+		// Production-grade cryptographic verification
 		expectedAud := getEnvVar("GOOGLE_CLIENT_ID", "")
 		if expectedAud == "" {
 			return nil, errors.New("server is missing GOOGLE_CLIENT_ID configuration")
 		}
-		if aud != expectedAud {
-			return nil, errors.New("invalid token audience")
+
+		payload, err := idtoken.Validate(context.Background(), req.Credential, expectedAud)
+		if err != nil {
+			return nil, fmt.Errorf("failed to verify Google token signature: %w", err)
 		}
 
-		// 4. Validate expiration
-		expFloat, _ := claims["exp"].(float64)
-		if int64(expFloat) < time.Now().Unix() {
-			return nil, errors.New("google token has expired")
+		// Verify issuer claim strictly
+		if payload.Issuer != "https://accounts.google.com" && payload.Issuer != "accounts.google.com" {
+			return nil, errors.New("invalid Google token issuer")
 		}
 
-		// 5. Verify email is verified by Google
-		emailVer, ok := claims["email_verified"].(bool)
+		// Verify email_verified is true
+		emailVerifiedClaim, exists := payload.Claims["email_verified"]
+		if !exists {
+			return nil, errors.New("google token is missing email_verified claim")
+		}
+		emailVer, ok := emailVerifiedClaim.(bool)
 		if !ok || !emailVer {
 			return nil, errors.New("email is not verified by Google")
 		}
 
-		email, _ = claims["email"].(string)
-		name, _ = claims["name"].(string)
+		email = payload.Claims["email"].(string)
+		name, _ = payload.Claims["name"].(string)
 		googleVerified = true
 	}
 
@@ -353,52 +338,65 @@ func (s *Service) GoogleLogin(req *GoogleLoginRequest) (*AuthResponse, error) {
 	return s.generateAuthResponse(user)
 }
 
-// SendOTP sends a 6-digit OTP to the phone, applying rate limit and cooldown rules via Redis
+// SendOTP sends a 6-digit OTP to the phone, applying rate limit and cooldown rules via PostgreSQL
 func (s *Service) SendOTP(phone string) error {
-	ctx := context.Background()
-	if s.rdb == nil {
+	if s.repo.db == nil {
 		return nil
 	}
 
-	// 1. Cooldown protection (60 seconds between sends)
-	cooldownKey := "otp_cooldown:" + phone
-	exists, err := s.rdb.Exists(ctx, cooldownKey).Result()
-	if err == nil && exists > 0 {
+	var verification OTPVerification
+	now := time.Now()
+
+	err := s.repo.db.Where("phone = ?", phone).First(&verification).Error
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			// First time OTP for this phone
+			verification = OTPVerification{
+				Phone:         phone,
+				Code:          "",
+				ExpiresAt:     now,
+				CooldownUntil: now,
+				Attempts:      0,
+				SendCount:     0,
+				WindowStart:   now,
+			}
+			if err := s.repo.db.Create(&verification).Error; err != nil {
+				return fmt.Errorf("failed to initialize verification record: %w", err)
+			}
+		} else {
+			return fmt.Errorf("failed to fetch verification record: %w", err)
+		}
+	}
+
+	// 1. Cooldown check (60 seconds between sends)
+	if now.Before(verification.CooldownUntil) {
 		return errors.New("please wait 60 seconds before requesting another code")
 	}
 
-	// 2. Rate limiting protection (max 3 OTP requests in 10 minutes)
-	limitKey := "otp_limit:" + phone
-	cntStr, err := s.rdb.Get(ctx, limitKey).Result()
-	if err == nil && cntStr != "" {
-		var cnt int
-		fmt.Sscanf(cntStr, "%d", &cnt)
-		if cnt >= 3 {
+	// 2. Rate limiting check (max 3 OTP requests in 10 minutes)
+	if now.Before(verification.WindowStart.Add(10 * time.Minute)) {
+		if verification.SendCount >= 3 {
 			return errors.New("maximum OTP request limit exceeded, please try again in 10 minutes")
 		}
+		verification.SendCount++
+	} else {
+		// 10-minute window has expired, reset window and count
+		verification.WindowStart = now
+		verification.SendCount = 1
 	}
 
 	// Generate secure random code
 	valNum, _ := rand.Int(rand.Reader, big.NewInt(900000))
 	otpCode := fmt.Sprintf("%06d", valNum.Int64()+100000)
 
-	// Store code in Redis (expires in 5 minutes)
-	valKey := "otp_val:" + phone
-	err = s.rdb.Set(ctx, valKey, otpCode, 5*time.Minute).Err()
-	if err != nil {
-		return fmt.Errorf("failed to save verification code: %w", err)
-	}
+	// Update verification details
+	verification.Code = otpCode
+	verification.ExpiresAt = now.Add(5 * time.Minute)
+	verification.CooldownUntil = now.Add(60 * time.Second)
+	verification.Attempts = 0 // Reset failed attempts for the new code
 
-	// Store cooldown tracker (60 seconds)
-	err = s.rdb.Set(ctx, cooldownKey, "active", 60*time.Second).Err()
-	if err != nil {
-		return fmt.Errorf("failed to set cooldown limit: %w", err)
-	}
-
-	// Increment send counter (expires in 10 minutes)
-	err = s.rdb.Incr(ctx, limitKey).Err()
-	if err == nil {
-		s.rdb.Expire(ctx, limitKey, 10*time.Minute)
+	if err := s.repo.db.Save(&verification).Error; err != nil {
+		return fmt.Errorf("failed to update verification details: %w", err)
 	}
 
 	fmt.Printf("PRODUCTION-GRADE OTP SYSTEM Dispatched OTP to phone %s: %s (expires in 5 minutes)\n", phone, otpCode)
@@ -407,41 +405,48 @@ func (s *Service) SendOTP(phone string) error {
 
 // VerifyOTP checks the code and updates user's verification status
 func (s *Service) VerifyOTP(phone string, code string) (bool, error) {
-	ctx := context.Background()
-	if s.rdb == nil {
+	if s.repo.db == nil {
 		return true, nil
 	}
 
+	var verification OTPVerification
+	now := time.Now()
+
+	err := s.repo.db.Where("phone = ?", phone).First(&verification).Error
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return false, errors.New("verification code has expired or is invalid")
+		}
+		return false, fmt.Errorf("failed to fetch verification record: %w", err)
+	}
+
 	// 1. Attempts verification tracker (fraud protection, max 3 attempts)
-	attemptsKey := "otp_attempts:" + phone
-	attStr, err := s.rdb.Get(ctx, attemptsKey).Result()
-	if err == nil && attStr != "" {
-		var att int
-		fmt.Sscanf(attStr, "%d", &att)
-		if att >= 3 {
+	if verification.Attempts >= 3 {
+		if now.Before(verification.ExpiresAt) {
 			return false, errors.New("maximum verification attempts exceeded, phone verification is locked")
 		}
 	}
 
-	// Get OTP from Redis
-	valKey := "otp_val:" + phone
-	savedCode, err := s.rdb.Get(ctx, valKey).Result()
-	if err != nil || savedCode == "" {
+	// Check if expired
+	if now.After(verification.ExpiresAt) {
 		return false, errors.New("verification code has expired or is invalid")
 	}
 
-	if savedCode != code {
-		// Mismatch: increment attempts (expiring after 5 mins)
-		err = s.rdb.Incr(ctx, attemptsKey).Err()
-		if err == nil {
-			s.rdb.Expire(ctx, attemptsKey, 5*time.Minute)
+	if verification.Code != code {
+		// Mismatch: increment attempts
+		verification.Attempts++
+		if saveErr := s.repo.db.Save(&verification).Error; saveErr != nil {
+			return false, fmt.Errorf("failed to update verification attempts: %w", saveErr)
 		}
 		return false, nil
 	}
 
-	// Correct code: clean up Redis trackers
-	s.rdb.Del(ctx, valKey)
-	s.rdb.Del(ctx, attemptsKey)
+	// Correct code: reset verification code/attempts to prevent reuse
+	verification.Code = ""
+	verification.Attempts = 0
+	if saveErr := s.repo.db.Save(&verification).Error; saveErr != nil {
+		return false, fmt.Errorf("failed to clear verification record: %w", saveErr)
+	}
 
 	// Update GORM database to mark phone as verified
 	err = s.repo.db.Model(&User{}).Where("phone = ?", phone).Update("is_verified", true).Error

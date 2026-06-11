@@ -88,3 +88,10 @@ func (s *Service) ListOutfitReviews(outfitID string, page, perPage int) ([]Revie
 	offset := (page - 1) * perPage
 	return s.repo.FindByOutfitID(outfitUUID, perPage, offset)
 }
+
+func (s *Service) ListAll(limit int) ([]Review, error) {
+	if limit <= 0 || limit > 100 {
+		limit = 10
+	}
+	return s.repo.FindAll(limit)
+}

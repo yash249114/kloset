@@ -10,6 +10,8 @@ import { useRouter } from 'next/navigation';
 import { useAuthStore } from '@/stores/auth.store';
 import { authAPI } from '@/lib/api/auth';
 import { Eye, EyeOff, Mail, Lock, User, Phone, ArrowRight, ShoppingBag, Store } from 'lucide-react';
+import { GoogleLogin } from '@react-oauth/google';
+import posthog from 'posthog-js';
 
 const registerSchema = z.object({
   name: z.string().min(2, 'Name must be at least 2 characters').max(100),
@@ -28,6 +30,30 @@ export default function RegisterForm() {
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [step, setStep] = useState<'role' | 'details'>('role');
+
+  const handleGoogleSuccess = async (credentialResponse: any) => {
+    try {
+      setIsLoading(true);
+      setError(null);
+      const result = await authAPI.googleLogin({ credential: credentialResponse.credential || '' });
+      setAuth(result.user, result.access_token, result.refresh_token);
+      
+      // Track signup event via Google Sign-In
+      posthog.capture('signup', { method: 'google', role: result.user.role, email: result.user.email });
+
+      const redirectMap: Record<string, string> = {
+        renter: '/',
+        seller: '/seller/dashboard',
+        admin: '/admin/dashboard',
+      };
+      router.push(redirectMap[result.user.role] || '/');
+    } catch (err: unknown) {
+      const error = err as { response?: { data?: { error?: string } } };
+      setError(error.response?.data?.error || 'Google Login failed. Please try again.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const {
     register,
@@ -50,6 +76,14 @@ export default function RegisterForm() {
       setError(null);
       const result = await authAPI.register(data);
       setAuth(result.user, result.access_token, result.refresh_token);
+      
+      // Track signup event via Email
+      posthog.capture('signup', { method: 'email', role: result.user.role, email: result.user.email });
+
+      if (result.user.role === 'seller') {
+        posthog.capture('seller registration', { method: 'email', email: result.user.email });
+      }
+
       const redirectMap: Record<string, string> = {
         renter: '/',
         seller: '/seller/dashboard',
@@ -336,6 +370,27 @@ export default function RegisterForm() {
             )}
           </AnimatePresence>
         </form>
+
+        {/* Divider */}
+        <div className="relative my-6">
+          <div className="absolute inset-0 flex items-center">
+            <div className="w-full border-t border-[var(--petal)]"></div>
+          </div>
+          <div className="relative flex justify-center text-xs uppercase">
+            <span className="bg-white px-3 text-[var(--ink-lighter)] font-mono">Or continue with</span>
+          </div>
+        </div>
+
+        {/* Google OAuth Button */}
+        <div className="flex justify-center w-full">
+          <GoogleLogin
+            onSuccess={handleGoogleSuccess}
+            onError={() => setError('Google Sign-in failed. Please try again.')}
+            useOneTap
+            shape="pill"
+            width="320px"
+          />
+        </div>
 
         {/* Login link */}
         <p className="text-center mt-6 text-sm" style={{ color: 'var(--ink-lighter)' }}>

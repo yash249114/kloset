@@ -47,18 +47,35 @@ func (s *Service) GetProfile(userID string) (*ProfileResponse, error) {
 	}
 
 	return &ProfileResponse{
-		ID:            user.ID.String(),
-		Name:          user.Name,
-		Email:         user.Email,
-		Phone:         user.Phone,
-		Role:          user.Role,
-		AvatarURL:     user.AvatarURL,
-		IsVerified:    user.IsVerified,
-		KYCStatus:     user.KYCStatus,
-		WalletBalance: user.WalletBalance,
-		TrustScore:    user.TrustScore,
-		Addresses:     addresses,
-		CreatedAt:     user.CreatedAt.Format("2006-01-02T15:04:05Z07:00"),
+		ID:                  user.ID.String(),
+		Name:                user.Name,
+		Email:               user.Email,
+		Phone:               user.Phone,
+		Role:                user.Role,
+		AvatarURL:           user.AvatarURL,
+		IsVerified:          user.IsVerified,
+		KYCStatus:           user.KYCStatus,
+		WalletBalance:       user.WalletBalance,
+		TrustScore:          user.TrustScore,
+		Addresses:           addresses,
+		CreatedAt:           user.CreatedAt.Format("2006-01-02T15:04:05Z07:00"),
+		DateOfBirth:         user.DateOfBirth,
+		Gender:              user.Gender,
+		PaymentPreferences:  user.PaymentPreferences,
+		BusinessName:        user.BusinessName,
+		BusinessAddress:     user.BusinessAddress,
+		PickupAddress:       user.PickupAddress,
+		ReturnAddress:       user.ReturnAddress,
+		GSTDetails:          user.GSTDetails,
+		PANDetails:          user.PANDetails,
+		BankDetails:         user.BankDetails,
+		PayoutAccount:       user.PayoutAccount,
+		KYCDocuments:        user.KYCDocuments,
+		StoreBanner:         user.StoreBanner,
+		StoreLogo:           user.StoreLogo,
+		BusinessDescription: user.BusinessDescription,
+		SupportContact:      user.SupportContact,
+		RentalPolicies:      user.RentalPolicies,
 	}, nil
 }
 
@@ -78,6 +95,57 @@ func (s *Service) UpdateProfile(userID string, req *UpdateProfileRequest) error 
 	}
 	if req.AvatarURL != nil {
 		updates["avatar_url"] = *req.AvatarURL
+	}
+	if req.DateOfBirth != nil {
+		updates["date_of_birth"] = req.DateOfBirth
+	}
+	if req.Gender != nil {
+		updates["gender"] = req.Gender
+	}
+	if req.PaymentPreferences != nil {
+		updates["payment_preferences"] = req.PaymentPreferences
+	}
+	if req.BusinessName != nil {
+		updates["business_name"] = req.BusinessName
+	}
+	if req.BusinessAddress != nil {
+		updates["business_address"] = req.BusinessAddress
+	}
+	if req.PickupAddress != nil {
+		updates["pickup_address"] = req.PickupAddress
+	}
+	if req.ReturnAddress != nil {
+		updates["return_address"] = req.ReturnAddress
+	}
+	if req.GSTDetails != nil {
+		updates["gst_details"] = req.GSTDetails
+	}
+	if req.PANDetails != nil {
+		updates["pan_details"] = req.PANDetails
+	}
+	if req.BankDetails != nil {
+		updates["bank_details"] = req.BankDetails
+	}
+	if req.PayoutAccount != nil {
+		updates["payout_account"] = req.PayoutAccount
+	}
+	if req.KYCDocuments != nil {
+		updates["kyc_documents"] = req.KYCDocuments
+	}
+	if req.StoreBanner != nil {
+		updates["store_banner"] = req.StoreBanner
+	}
+	if req.StoreLogo != nil {
+		updates["store_logo"] = req.StoreLogo
+	}
+	if req.BusinessDescription != nil {
+		updates["business_description"] = req.BusinessDescription
+	}
+	if req.SupportContact != nil {
+		updates["support_contact"] = req.SupportContact
+	}
+	if req.RentalPolicies != nil {
+		updates["rental_policies"] = req.RentalPolicies
 	}
 
 	if len(updates) == 0 {

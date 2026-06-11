@@ -57,6 +57,27 @@ type UserResponse struct {
 	WalletBalance float64 `json:"wallet_balance"`
 	TrustScore    int     `json:"trust_score"`
 	CreatedAt     string  `json:"created_at"`
+
+	// Renter Profile Attributes
+	DateOfBirth        *string `json:"date_of_birth"`
+	Gender             *string `json:"gender"`
+	PaymentPreferences *string `json:"payment_preferences"`
+
+	// Seller Business Attributes
+	BusinessName        *string `json:"business_name"`
+	BusinessAddress     *string `json:"business_address"`
+	PickupAddress       *string `json:"pickup_address"`
+	ReturnAddress       *string `json:"return_address"`
+	GSTDetails          *string `json:"gst_details"`
+	PANDetails          *string `json:"pan_details"`
+	BankDetails         *string `json:"bank_details"`
+	PayoutAccount       *string `json:"payout_account"`
+	KYCDocuments        *string `json:"kyc_documents"`
+	StoreBanner         *string `json:"store_banner"`
+	StoreLogo           *string `json:"store_logo"`
+	BusinessDescription *string `json:"business_description"`
+	SupportContact      *string `json:"support_contact"`
+	RentalPolicies      *string `json:"rental_policies"`
 }
 
 // SendOTPRequest represents the OTP send request payload

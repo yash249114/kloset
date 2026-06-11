@@ -1,6 +1,8 @@
 package auth
 
 import (
+	"time"
+
 	"github.com/go-playground/validator/v10"
 	"github.com/gofiber/fiber/v2"
 	"github.com/kloset/backend/pkg/response"
@@ -36,6 +38,7 @@ func (h *Handler) Register(c *fiber.Ctx) error {
 		return response.Conflict(c, err.Error())
 	}
 
+	h.setAuthCookies(c, result.AccessToken, result.RefreshToken)
 	return response.Created(c, "Account created successfully", result)
 }
 
@@ -55,6 +58,7 @@ func (h *Handler) Login(c *fiber.Ctx) error {
 		return response.Unauthorized(c, err.Error())
 	}
 
+	h.setAuthCookies(c, result.AccessToken, result.RefreshToken)
 	return response.Success(c, "Login successful", result)
 }
 
@@ -74,6 +78,7 @@ func (h *Handler) Refresh(c *fiber.Ctx) error {
 		return response.Unauthorized(c, err.Error())
 	}
 
+	h.setAuthCookies(c, result.AccessToken, result.RefreshToken)
 	return response.Success(c, "Token refreshed", result)
 }
 
@@ -88,6 +93,7 @@ func (h *Handler) Logout(c *fiber.Ctx) error {
 		return response.InternalError(c, "Failed to logout")
 	}
 
+	h.clearAuthCookies(c)
 	return response.Success(c, "Logged out successfully", nil)
 }
 
@@ -122,6 +128,7 @@ func (h *Handler) GoogleLogin(c *fiber.Ctx) error {
 		return response.Unauthorized(c, err.Error())
 	}
 
+	h.setAuthCookies(c, result.AccessToken, result.RefreshToken)
 	return response.Success(c, "Google login successful", result)
 }
 
@@ -178,4 +185,42 @@ func (h *Handler) RegisterRoutes(router fiber.Router, authMiddleware fiber.Handl
 	auth.Post("/refresh", h.Refresh)
 	auth.Post("/logout", authMiddleware, h.Logout)
 	auth.Get("/me", authMiddleware, h.Me)
+}
+
+func (h *Handler) setAuthCookies(c *fiber.Ctx, accessToken, refreshToken string) {
+	c.Cookie(&fiber.Cookie{
+		Name:     "kloset_access_token",
+		Value:    accessToken,
+		Expires:  time.Now().Add(15 * time.Minute),
+		HTTPOnly: true,
+		Secure:   true,
+		SameSite: "Lax",
+	})
+	c.Cookie(&fiber.Cookie{
+		Name:     "kloset_refresh_token",
+		Value:    refreshToken,
+		Expires:  time.Now().Add(720 * time.Hour),
+		HTTPOnly: true,
+		Secure:   true,
+		SameSite: "Lax",
+	})
+}
+
+func (h *Handler) clearAuthCookies(c *fiber.Ctx) {
+	c.Cookie(&fiber.Cookie{
+		Name:     "kloset_access_token",
+		Value:    "",
+		Expires:  time.Unix(0, 0),
+		HTTPOnly: true,
+		Secure:   true,
+		SameSite: "Lax",
+	})
+	c.Cookie(&fiber.Cookie{
+		Name:     "kloset_refresh_token",
+		Value:    "",
+		Expires:  time.Unix(0, 0),
+		HTTPOnly: true,
+		Secure:   true,
+		SameSite: "Lax",
+	})
 }

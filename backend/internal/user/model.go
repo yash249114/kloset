@@ -45,6 +45,27 @@ type User struct {
 	UpdatedAt     time.Time      `json:"updated_at"`
 	DeletedAt     gorm.DeletedAt `gorm:"index" json:"-"`
 	Addresses     []UserAddress  `gorm:"foreignKey:UserID" json:"addresses,omitempty"`
+
+	// Renter Profile Attributes
+	DateOfBirth        *string `gorm:"size:20" json:"date_of_birth"`
+	Gender             *string `gorm:"size:20" json:"gender"`
+	PaymentPreferences *string `gorm:"type:text" json:"payment_preferences"`
+
+	// Seller Business Attributes
+	BusinessName        *string `gorm:"size:255" json:"business_name"`
+	BusinessAddress     *string `gorm:"type:text" json:"business_address"`
+	PickupAddress       *string `gorm:"type:text" json:"pickup_address"`
+	ReturnAddress       *string `gorm:"type:text" json:"return_address"`
+	GSTDetails          *string `gorm:"size:50" json:"gst_details"`
+	PANDetails          *string `gorm:"size:50" json:"pan_details"`
+	BankDetails         *string `gorm:"type:text" json:"bank_details"`
+	PayoutAccount       *string `gorm:"size:100" json:"payout_account"`
+	KYCDocuments        *string `gorm:"type:text" json:"kyc_documents"`
+	StoreBanner         *string `gorm:"type:text" json:"store_banner"`
+	StoreLogo           *string `gorm:"type:text" json:"store_logo"`
+	BusinessDescription *string `gorm:"type:text" json:"business_description"`
+	SupportContact      *string `gorm:"size:50" json:"support_contact"`
+	RentalPolicies      *string `gorm:"type:text" json:"rental_policies"`
 }
 
 func (User) TableName() string {

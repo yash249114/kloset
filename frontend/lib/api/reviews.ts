@@ -33,4 +33,9 @@ export const reviewsAPI = {
       total: data.meta?.total || 0,
     };
   },
+
+  listAll: async (limit = 10): Promise<ReviewResponse[]> => {
+    const { data } = await client.get<APIResponse<ReviewResponse[]>>(`/reviews?limit=${limit}`);
+    return data.data || [];
+  },
 };

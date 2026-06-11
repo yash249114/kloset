@@ -15,21 +15,27 @@ import (
 type Config struct {
 	App        AppConfig
 	DB         DBConfig
-	Redis      RedisConfig
 	JWT        JWTConfig
 	Cloudinary CloudinaryConfig
 	Razorpay   RazorpayConfig
 	Resend     ResendConfig
 	AI         AIConfig
 	Platform   PlatformConfig
+	Sentry     SentryConfig
 }
 
 type AppConfig struct {
-	Name        string
-	Env         string
-	Port        string
-	URL         string
-	FrontendURL string
+	Name           string
+	Env            string
+	Port           string
+	URL            string
+	FrontendURL    string
+	AllowedOrigins string
+	LogLevel       string
+}
+
+type SentryConfig struct {
+	DSN string
 }
 
 type DBConfig struct {
@@ -41,9 +47,6 @@ type DBConfig struct {
 	SSLMode  string
 }
 
-type RedisConfig struct {
-	URL string
-}
 
 type JWTConfig struct {
 	Secret        string
@@ -91,11 +94,13 @@ func Load() *Config {
 
 	cfg := &Config{
 		App: AppConfig{
-			Name:        getEnv("APP_NAME", "Kloset"),
-			Env:         getEnv("APP_ENV", "development"),
-			Port:        getEnv("APP_PORT", "8080"),
-			URL:         getEnv("APP_URL", "http://localhost:8080"),
-			FrontendURL: getEnv("FRONTEND_URL", "http://localhost:3000"),
+			Name:           getEnv("APP_NAME", "Kloset"),
+			Env:            getEnv("APP_ENV", "development"),
+			Port:           getEnv("APP_PORT", "8080"),
+			URL:            getEnv("APP_URL", "http://localhost:8080"),
+			FrontendURL:    getEnv("FRONTEND_URL", "http://localhost:3000"),
+			AllowedOrigins: getEnv("ALLOWED_ORIGINS", "http://localhost:3000"),
+			LogLevel:       getEnv("LOG_LEVEL", "info"),
 		},
 		DB: DBConfig{
 			Host:     getEnv("DB_HOST", "localhost"),
@@ -105,9 +110,7 @@ func Load() *Config {
 			Name:     getEnv("DB_NAME", "kloset"),
 			SSLMode:  getEnv("DB_SSLMODE", "disable"),
 		},
-		Redis: RedisConfig{
-			URL: getEnv("REDIS_URL", "redis://localhost:6379"),
-		},
+
 		JWT: JWTConfig{
 			Secret:        getEnv("JWT_SECRET", "kloset-dev-secret-change-in-production"),
 			AccessExpiry:  parseDuration(getEnv("JWT_ACCESS_EXPIRY", "15m")),
@@ -138,6 +141,9 @@ func Load() *Config {
 			MaxImagesPerOutfit:        getEnvInt("MAX_IMAGES_PER_OUTFIT", 6),
 			BookingAcceptWindowHours:  getEnvInt("BOOKING_ACCEPT_WINDOW_HOURS", 24),
 			SecurityDepositRefundDays: getEnvInt("SECURITY_DEPOSIT_REFUND_DAYS", 3),
+		},
+		Sentry: SentryConfig{
+			DSN: getEnv("SENTRY_DSN", ""),
 		},
 	}
 

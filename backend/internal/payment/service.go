@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/getsentry/sentry-go"
 	"github.com/google/uuid"
 	"github.com/kloset/backend/internal/booking"
 	"github.com/kloset/backend/internal/config"
@@ -46,10 +47,12 @@ func (s *Service) VerifyPayment(req *VerifyPaymentRequest) (*booking.Booking, er
 	// Verify Razorpay signature strictly
 	if !s.rzpClient.VerifySignature(req.RazorpayOrderID, req.RazorpayPaymentID, req.RazorpaySignature) {
 		log.Error().Str("provided", req.RazorpaySignature).Msg("Razorpay signature mismatch")
+		err := errors.New("payment signature verification failed")
+		sentry.CaptureException(err)
 		if s.logSvc != nil {
 			s.logSvc.LogEvent("anonymous", "Failed Razorpay payment signature verification: OrderID: "+req.RazorpayOrderID, "127.0.0.1", "error")
 		}
-		return nil, errors.New("payment signature verification failed")
+		return nil, err
 	}
 
 	// Update booking and payment status in GORM transaction
@@ -110,6 +113,7 @@ func (s *Service) VerifyPayment(req *VerifyPaymentRequest) (*booking.Booking, er
 	})
 
 	if err != nil {
+		sentry.CaptureException(err)
 		return nil, err
 	}
 
@@ -159,10 +163,12 @@ func (s *Service) HandleWebhook(payload []byte, signature string) error {
 	// Verify webhook signature strictly
 	if !s.rzpClient.VerifyWebhookSignature(payload, signature) {
 		log.Error().Msg("Razorpay webhook signature verification failed")
+		err := errors.New("invalid webhook signature")
+		sentry.CaptureException(err)
 		if s.logSvc != nil {
 			s.logSvc.LogEvent("anonymous", "Failed Razorpay webhook signature verification", "127.0.0.1", "error")
 		}
-		return errors.New("invalid webhook signature")
+		return err
 	}
 
 	// Parse JSON
@@ -241,6 +247,7 @@ func (s *Service) HandleWebhook(payload []byte, signature string) error {
 
 		if err != nil {
 			log.Error().Err(err).Msg("Failed to process payment.captured event")
+			sentry.CaptureException(err)
 			return err
 		}
 
@@ -261,6 +268,7 @@ func (s *Service) HandleWebhook(payload []byte, signature string) error {
 
 	case "payment.failed":
 		orderID := event.Payload.Payment.Entity.OrderID
+		sentry.CaptureMessage(fmt.Sprintf("Razorpay payment failed for Order ID: %s", orderID))
 		var b booking.Booking
 		if err := s.repo.db.First(&b, "razorpay_order_id = ?", orderID).Error; err == nil {
 			s.repo.db.Model(&b).Update("payment_status", "failed")

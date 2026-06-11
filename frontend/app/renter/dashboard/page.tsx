@@ -9,6 +9,7 @@ import { bookingsAPI } from '@/lib/api/bookings';
 import { outfitsAPI } from '@/lib/api/outfits';
 import { reviewsAPI } from '@/lib/api/reviews';
 import { disputesAPI } from '@/lib/api/disputes';
+import { userAPI } from '@/lib/api/user';
 import FloatIn from '@/components/motion/FloatIn';
 import FloralDivider from '@/components/floral/FloralDivider';
 import PetalBackground from '@/components/floral/PetalBackground';
@@ -85,11 +86,27 @@ const mockWishlist: any[] = [
 ];
 
 export default function RenterDashboardPage() {
-  const { user } = useAuthStore();
-  const [activeTab, setActiveTab] = useState<'bookings' | 'wishlist'>('bookings');
+  const { user, setUser } = useAuthStore();
+  const [activeTab, setActiveTab] = useState<'bookings' | 'wishlist' | 'profile'>('bookings');
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [wishlist, setWishlist] = useState<Outfit[]>([]);
   const [loading, setLoading] = useState(true);
+
+  // Profile states
+  const [profile, setProfile] = useState<any>(null);
+  const [addresses, setAddresses] = useState<any[]>([]);
+  const [name, setName] = useState('');
+  const [phone, setPhone] = useState('');
+  const [dob, setDob] = useState('');
+  const [gender, setGender] = useState('');
+  const [pref, setPref] = useState('');
+
+  // Add address form state
+  const [newLabel, setNewLabel] = useState('Home');
+  const [newAddress, setNewAddress] = useState('');
+  const [newCity, setNewCity] = useState('');
+  const [newState, setNewState] = useState('');
+  const [newPincode, setNewPincode] = useState('');
 
   // Modal states
   const [showReviewModal, setShowReviewModal] = useState(false);
@@ -110,8 +127,8 @@ export default function RenterDashboardPage() {
     if (typeof window !== 'undefined') {
       const params = new URLSearchParams(window.location.search);
       const tab = params.get('tab');
-      if (tab === 'wishlist' || tab === 'bookings') {
-        setActiveTab(tab);
+      if (tab === 'wishlist' || tab === 'bookings' || tab === 'profile') {
+        setActiveTab(tab as any);
       }
     }
   }, []);
@@ -119,9 +136,11 @@ export default function RenterDashboardPage() {
   const loadDashboardData = async (silent = false) => {
     try {
       if (!silent) setLoading(true);
-      const [bookingsResp, wishlistResp] = await Promise.allSettled([
+      const [bookingsResp, wishlistResp, profileResp, addressesResp] = await Promise.allSettled([
         bookingsAPI.listMyBookings(),
         outfitsAPI.getWishlist(),
+        userAPI.getProfile(),
+        userAPI.getAddresses(),
       ]);
 
       if (bookingsResp.status === 'fulfilled') {
@@ -137,12 +156,97 @@ export default function RenterDashboardPage() {
         console.warn('Failed to load wishlist, using fallback:', wishlistResp.reason);
         setWishlist(mockWishlist);
       }
+
+      if (profileResp.status === 'fulfilled') {
+        setProfile(profileResp.value);
+        setName(profileResp.value.name || '');
+        setPhone(profileResp.value.phone || '');
+        setDob(profileResp.value.date_of_birth || '');
+        setGender(profileResp.value.gender || '');
+        setPref(profileResp.value.payment_preferences || '');
+      }
+
+      if (addressesResp.status === 'fulfilled') {
+        setAddresses(addressesResp.value || []);
+      }
     } catch (err) {
       console.error('Renter dashboard data load failure:', err);
       setBookings(mockBookings);
       setWishlist(mockWishlist);
     } finally {
       if (!silent) setLoading(false);
+    }
+  };
+
+  const handleSaveProfile = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      await userAPI.updateProfile({
+        name,
+        phone,
+        date_of_birth: dob,
+        gender,
+        payment_preferences: pref,
+      });
+      toast.success('Profile updated successfully!');
+      if (user) {
+        setUser({
+          ...user,
+          name,
+          phone,
+          date_of_birth: dob,
+          gender,
+          payment_preferences: pref,
+        } as any);
+      }
+    } catch (err) {
+      toast.error('Failed to update profile.');
+    }
+  };
+
+  const handleCreateAddress = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newAddress || !newCity || !newState || !newPincode) {
+      toast.error('Please fill out all required address fields.');
+      return;
+    }
+    try {
+      await userAPI.addAddress({
+        label: newLabel,
+        full_address: newAddress,
+        city: newCity,
+        state: newState,
+        pincode: newPincode,
+        is_default: addresses.length === 0,
+      });
+      toast.success('Address added to your account.');
+      setNewAddress('');
+      setNewCity('');
+      setNewState('');
+      setNewPincode('');
+      loadDashboardData(true);
+    } catch (err) {
+      toast.error('Failed to add address.');
+    }
+  };
+
+  const handleDeleteAddress = async (id: string) => {
+    try {
+      await userAPI.deleteAddress(id);
+      toast.success('Address removed.');
+      loadDashboardData(true);
+    } catch (err) {
+      toast.error('Failed to remove address.');
+    }
+  };
+
+  const handleSetDefaultAddress = async (id: string) => {
+    try {
+      await userAPI.setDefaultAddress(id);
+      toast.success('Default address updated.');
+      loadDashboardData(true);
+    } catch (err) {
+      toast.error('Failed to update default address.');
     }
   };
 
@@ -390,10 +494,11 @@ export default function RenterDashboardPage() {
                   {[
                     { id: 'bookings', label: 'My Bookings' },
                     { id: 'wishlist', label: 'Saved Wishlist' },
+                    { id: 'profile', label: 'Profile & Addresses' },
                   ].map((tab) => (
                     <button
                       key={tab.id}
-                      onClick={() => setActiveTab(tab.id as 'bookings' | 'wishlist')}
+                      onClick={() => setActiveTab(tab.id as any)}
                       className="relative pb-3 text-sm font-mono tracking-wider uppercase font-bold cursor-pointer"
                       style={{
                         color: activeTab === tab.id ? 'var(--rose)' : 'var(--ink-light)',
@@ -411,7 +516,7 @@ export default function RenterDashboardPage() {
                   ))}
                 </div>
 
-                {activeTab === 'bookings' ? (
+                {activeTab === 'bookings' && (
                   <div className="space-y-4">
                     {bookings.length > 0 ? (
                       bookings.map((booking) => {
@@ -519,7 +624,9 @@ export default function RenterDashboardPage() {
                       </div>
                     )}
                   </div>
-                ) : (
+                )}
+
+                {activeTab === 'wishlist' && (
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     {wishlist.length > 0 ? (
                       wishlist.map((item) => {
@@ -557,6 +664,130 @@ export default function RenterDashboardPage() {
                         </Link>
                       </div>
                     )}
+                  </div>
+                )}
+
+                {activeTab === 'profile' && (
+                  <div className="space-y-8">
+                    {/* Renter Profile details */}
+                    <div className="bg-white rounded-2xl p-6 border border-[var(--petal)] shadow-sm space-y-6">
+                      <h3 className="font-display text-lg font-semibold text-[var(--ink)] pb-3 border-b border-[var(--bloom)]">
+                        Renter Profile Details
+                      </h3>
+                      <form onSubmit={handleSaveProfile} className="space-y-4">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                          <div>
+                            <label className="text-[10px] uppercase font-mono tracking-wider text-[var(--ink-light)] block mb-1">Full Name</label>
+                            <input type="text" value={name} onChange={(e) => setName(e.target.value)} className="input-kloset text-xs" required />
+                          </div>
+                          <div>
+                            <label className="text-[10px] uppercase font-mono tracking-wider text-[var(--ink-light)] block mb-1">Phone Number</label>
+                            <input type="text" value={phone} onChange={(e) => setPhone(e.target.value)} className="input-kloset text-xs" required />
+                          </div>
+                        </div>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                          <div>
+                            <label className="text-[10px] uppercase font-mono tracking-wider text-[var(--ink-light)] block mb-1">Date of Birth</label>
+                            <input type="date" value={dob} onChange={(e) => setDob(e.target.value)} className="input-kloset text-xs" />
+                          </div>
+                          <div>
+                            <label className="text-[10px] uppercase font-mono tracking-wider text-[var(--ink-light)] block mb-1">Gender</label>
+                            <select value={gender} onChange={(e) => setGender(e.target.value)} className="input-kloset text-xs bg-white">
+                              <option value="">Select Gender</option>
+                              <option value="female">Female</option>
+                              <option value="male">Male</option>
+                              <option value="non_binary">Non-Binary</option>
+                              <option value="prefer_not_to_say">Prefer Not to Say</option>
+                            </select>
+                          </div>
+                        </div>
+                        <div>
+                          <label className="text-[10px] uppercase font-mono tracking-wider text-[var(--ink-light)] block mb-1">Payment Preferences</label>
+                          <input type="text" value={pref} onChange={(e) => setPref(e.target.value)} className="input-kloset text-xs" placeholder="e.g. Card ending 4321, UPI name@upi" />
+                        </div>
+                        <button type="submit" className="btn-gold !h-10 !px-6 text-xs uppercase font-mono tracking-wider cursor-pointer">
+                          Save Profile Changes
+                        </button>
+                      </form>
+                    </div>
+
+                    {/* Saved Addresses list */}
+                    <div className="bg-white rounded-2xl p-6 border border-[var(--petal)] shadow-sm space-y-6">
+                      <h3 className="font-display text-lg font-semibold text-[var(--ink)] pb-3 border-b border-[var(--bloom)]">
+                        Saved Shipping Destinations
+                      </h3>
+                      {addresses.length === 0 ? (
+                        <p className="text-xs text-[var(--ink-lighter)]">No addresses saved yet. Use the form below to add one.</p>
+                      ) : (
+                        <div className="space-y-3">
+                          {addresses.map((addr) => (
+                            <div key={addr.id} className="p-4 rounded-xl border border-[var(--petal)] bg-[#faf9f6]/30 flex justify-between items-start gap-4 text-xs">
+                              <div className="space-y-1">
+                                <div className="flex items-center gap-2">
+                                  <span className="font-bold text-[var(--ink)]">{addr.label || 'Address'}</span>
+                                  {addr.is_default && <span className="badge badge-rose text-[8px] uppercase font-bold">Default</span>}
+                                </div>
+                                <p className="text-[var(--ink-light)] leading-relaxed">{addr.full_address}</p>
+                                <p className="text-[var(--ink-lighter)] font-mono text-[10px]">{addr.city}, {addr.state} - {addr.pincode}</p>
+                              </div>
+                              <div className="flex flex-col gap-1.5 items-end flex-shrink-0">
+                                {!addr.is_default && (
+                                  <button onClick={() => handleSetDefaultAddress(addr.id)} className="text-[9px] font-mono text-[var(--rose)] hover:underline uppercase tracking-wider cursor-pointer">
+                                    Set Default
+                                  </button>
+                                )}
+                                <button onClick={() => handleDeleteAddress(addr.id)} className="text-[9px] font-mono text-gray-400 hover:text-red-500 hover:underline uppercase tracking-wider cursor-pointer">
+                                  Delete
+                                </button>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+
+                      <div className="border-t border-[var(--bloom)] pt-6 space-y-4">
+                        <h4 className="text-xs uppercase tracking-wider font-mono text-[var(--rose)]">Add New Address</h4>
+                        <form onSubmit={handleCreateAddress} className="space-y-4">
+                          <div className="grid grid-cols-3 gap-3">
+                            {['Home', 'Office', 'Other'].map((lbl) => (
+                              <button
+                                key={lbl}
+                                type="button"
+                                onClick={() => setNewLabel(lbl)}
+                                className={`py-1.5 px-3 rounded-lg text-xs font-mono transition-all cursor-pointer ${
+                                  newLabel === lbl
+                                    ? 'bg-[var(--rose)] text-white'
+                                    : 'bg-white border border-[var(--petal)] text-[var(--ink-light)]'
+                                }`}
+                              >
+                                {lbl}
+                              </button>
+                            ))}
+                          </div>
+                          <div>
+                            <label className="text-[10px] uppercase font-mono tracking-wider text-[var(--ink-light)] block mb-1">Street Address</label>
+                            <input type="text" value={newAddress} onChange={(e) => setNewAddress(e.target.value)} className="input-kloset text-xs" placeholder="Flat number, building name, street address" required />
+                          </div>
+                          <div className="grid grid-cols-3 gap-3">
+                            <div>
+                              <label className="text-[10px] uppercase font-mono tracking-wider text-[var(--ink-light)] block mb-1">City</label>
+                              <input type="text" value={newCity} onChange={(e) => setNewCity(e.target.value)} className="input-kloset text-xs" placeholder="Mumbai" required />
+                            </div>
+                            <div>
+                              <label className="text-[10px] uppercase font-mono tracking-wider text-[var(--ink-light)] block mb-1">State</label>
+                              <input type="text" value={newState} onChange={(e) => setNewState(e.target.value)} className="input-kloset text-xs" placeholder="Maharashtra" required />
+                            </div>
+                            <div>
+                              <label className="text-[10px] uppercase font-mono tracking-wider text-[var(--ink-light)] block mb-1">Pincode</label>
+                              <input type="text" value={newPincode} onChange={(e) => setNewPincode(e.target.value)} className="input-kloset text-xs" placeholder="400001" required />
+                            </div>
+                          </div>
+                          <button type="submit" className="btn-gold !h-10 w-full text-xs uppercase font-mono tracking-wider cursor-pointer">
+                            Add Address
+                          </button>
+                        </form>
+                      </div>
+                    </div>
                   </div>
                 )}
               </div>

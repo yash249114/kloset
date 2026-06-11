@@ -7,6 +7,7 @@ import Image from 'next/image';
 import { useAuthStore } from '@/stores/auth.store';
 import { outfitsAPI } from '@/lib/api/outfits';
 import { bookingsAPI } from '@/lib/api/bookings';
+import { userAPI } from '@/lib/api/user';
 import FloatIn from '@/components/motion/FloatIn';
 import PetalBackground from '@/components/floral/PetalBackground';
 import { toast } from 'sonner';
@@ -106,8 +107,8 @@ const trendData = [
 ];
 
 export default function SellerDashboardPage() {
-  const { user } = useAuthStore();
-  const [activeTab, setActiveTab] = useState<'showcase' | 'analytics' | 'orders' | 'reviews'>('showcase');
+  const { user, setUser } = useAuthStore();
+  const [activeTab, setActiveTab] = useState<'showcase' | 'analytics' | 'orders' | 'reviews' | 'profile'>('showcase');
   
   // Dashboard state
   const [listings, setListings] = useState<Outfit[]>([]);
@@ -115,6 +116,22 @@ export default function SellerDashboardPage() {
   const [reviews, setReviews] = useState(mockReviews);
   const [isLoading, setIsLoading] = useState(false);
   
+  // Seller business profile states
+  const [profile, setProfile] = useState<any>(null);
+  const [bizName, setBizName] = useState('');
+  const [bizAddress, setBizAddress] = useState('');
+  const [pickupAddress, setPickupAddress] = useState('');
+  const [returnAddress, setReturnAddress] = useState('');
+  const [gst, setGst] = useState('');
+  const [pan, setPan] = useState('');
+  const [bank, setBank] = useState('');
+  const [payout, setPayout] = useState('');
+  const [desc, setDesc] = useState('');
+  const [supportContact, setSupportContact] = useState('');
+  const [policies, setPolicies] = useState('');
+  const [storeBanner, setStoreBanner] = useState('');
+  const [storeLogo, setStoreLogo] = useState('');
+
   // Edit listing state
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editTitle, setEditTitle] = useState('');
@@ -133,9 +150,10 @@ export default function SellerDashboardPage() {
   const loadSellerData = async (silent = false) => {
     if (!silent) setIsLoading(true);
     try {
-      const [outfitsResp, bookingsResp] = await Promise.allSettled([
+      const [outfitsResp, bookingsResp, profileResp] = await Promise.allSettled([
         outfitsAPI.getSellerOutfits(),
         bookingsAPI.listSellerBookings(),
+        userAPI.getProfile(),
       ]);
 
       if (outfitsResp.status === 'fulfilled') {
@@ -151,10 +169,69 @@ export default function SellerDashboardPage() {
         console.warn('Failed to load seller bookings, using fallback:', bookingsResp.reason);
         setBookings([]);
       }
+
+      if (profileResp.status === 'fulfilled') {
+        setProfile(profileResp.value);
+        setBizName(profileResp.value.business_name || '');
+        setBizAddress(profileResp.value.business_address || '');
+        setPickupAddress(profileResp.value.pickup_address || '');
+        setReturnAddress(profileResp.value.return_address || '');
+        setGst(profileResp.value.gst_details || '');
+        setPan(profileResp.value.pan_details || '');
+        setBank(profileResp.value.bank_details || '');
+        setPayout(profileResp.value.payout_account || '');
+        setDesc(profileResp.value.business_description || '');
+        setSupportContact(profileResp.value.support_contact || '');
+        setPolicies(profileResp.value.rental_policies || '');
+        setStoreBanner(profileResp.value.store_banner || '');
+        setStoreLogo(profileResp.value.store_logo || '');
+      }
     } catch (err) {
       console.error(err);
     } finally {
       if (!silent) setIsLoading(false);
+    }
+  };
+
+  const handleSaveSellerProfile = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      await userAPI.updateProfile({
+        business_name: bizName,
+        business_address: bizAddress,
+        pickup_address: pickupAddress,
+        return_address: returnAddress,
+        gst_details: gst,
+        pan_details: pan,
+        bank_details: bank,
+        payout_account: payout,
+        business_description: desc,
+        support_contact: supportContact,
+        rental_policies: policies,
+        store_banner: storeBanner,
+        store_logo: storeLogo,
+      });
+      toast.success('Merchant profile updated successfully!');
+      if (user) {
+        setUser({
+          ...user,
+          business_name: bizName,
+          business_address: bizAddress,
+          pickup_address: pickupAddress,
+          return_address: returnAddress,
+          gst_details: gst,
+          pan_details: pan,
+          bank_details: bank,
+          payout_account: payout,
+          business_description: desc,
+          support_contact: supportContact,
+          rental_policies: policies,
+          store_banner: storeBanner,
+          store_logo: storeLogo,
+        } as any);
+      }
+    } catch (err) {
+      toast.error('Failed to update store profile.');
     }
   };
 

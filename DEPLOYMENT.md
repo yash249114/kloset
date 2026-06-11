@@ -16,10 +16,6 @@ This guide details steps to set up Kloset in a secure, production-grade cloud en
   ```
 * Enforce SSL/TLS connections in the parameter groups (`rds.force_ssl = 1`).
 
-### Redis (ElastiCache / Redis Enterprise)
-* Deploy a Redis cluster with AUTH enabled.
-* Expose connection endpoints over TLS.
-
 ---
 
 ## 2. API Server Host (EC2 / ECS / systemd)

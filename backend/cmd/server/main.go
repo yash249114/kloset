@@ -4,6 +4,7 @@ import (
 	"os"
 	"time"
 
+	"github.com/getsentry/sentry-go"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/recover"
 	"github.com/rs/zerolog"
@@ -41,6 +42,21 @@ func main() {
 	// Load configuration
 	cfg := config.Load()
 
+	// Initialize Sentry SDK
+	if cfg.Sentry.DSN != "" {
+		err := sentry.Init(sentry.ClientOptions{
+			Dsn:              cfg.Sentry.DSN,
+			Environment:      cfg.App.Env,
+			AttachStacktrace: true,
+		})
+		if err != nil {
+			log.Error().Err(err).Msg("sentry.Init failed")
+		} else {
+			log.Info().Msg("⚡ Sentry SDK initialized successfully")
+			defer sentry.Flush(2 * time.Second)
+		}
+	}
+
 	// Connect to PostgreSQL
 	db, err := database.ConnectPostgres(&cfg.DB)
 	if err != nil {
@@ -54,13 +70,17 @@ func main() {
 		&support.SupportTicket{},
 		&logging.SystemLog{},
 		&email.EmailLog{},
+		&auth.OTPVerification{},
+		&middleware.RateLimitEvent{},
+		&email.EmailQueue{},
+		&logging.AICache{},
+		&auth.User{},
+		&user.UserAddress{},
 	)
 	if err != nil {
 		log.Error().Err(err).Msg("GORM database auto-migration failed")
 	}
 
-	// Connect to Redis (optional — graceful fallback)
-	rdb, _ := database.ConnectRedis(cfg.Redis.URL)
 
 	// Initialize Fiber
 	app := fiber.New(fiber.Config{
@@ -85,6 +105,7 @@ func main() {
 	})
 
 	// Global middleware
+	app.Use(middleware.SentryMiddleware())
 	app.Use(recover.New())
 	app.Use(middleware.CORSMiddleware(cfg.App.FrontendURL))
 	app.Use(middleware.LoggerMiddleware())
@@ -102,10 +123,8 @@ func main() {
 		return c.Next()
 	})
 
-	// Rate limiting (if Redis available)
-	if rdb != nil {
-		app.Use(middleware.RateLimiter(rdb, 100, time.Minute))
-	}
+	// Rate limiting
+	app.Use(middleware.RateLimiter(db, 100, time.Minute))
 
 	// Health check
 	app.Get("/health", func(c *fiber.Ctx) error {
@@ -142,7 +161,7 @@ func main() {
 
 	// ─── Auth Module ───────────────────────────
 	authRepo := auth.NewRepository(db)
-	authService := auth.NewService(authRepo, cfg, notifService, logService, rdb)
+	authService := auth.NewService(authRepo, cfg, notifService, logService)
 	authHandler := auth.NewHandler(authService)
 
 	// ─── Outfit Module ─────────────────────────
@@ -179,7 +198,7 @@ func main() {
 	adminHandler := admin.NewHandler(adminService)
 
 	// ─── Monitoring Module ─────────────────────
-	monitoringHandler := monitoring.NewHandler(db, rdb, cfg)
+	monitoringHandler := monitoring.NewHandler(db, cfg)
 
 	// Register Routes
 	authHandler.RegisterRoutes(api, authMw)

@@ -13,7 +13,7 @@
 *   **Transactional Notifications**: In-App Notification Center and automated HTML transactional emails dispatched via Resend.
 *   **Robust Background Workers**: Resilient database-backed email worker that guarantees dispatch retries in case of external service outages.
 *   **Admin Studio & AIOps**: Operational control room with real-time diagnostic telemetry, KYC verification queue, outfit moderation, dispute resolution, and system logs.
-*   **Upstash Redis Rate Limiting**: Intelligent API rate limiting with graceful fallback to prevent server downtime during cache outages.
+*   **PostgreSQL Rate Limiting**: Intelligent API rate limiting using atomic transaction row locks in PostgreSQL.
 
 ---
 
@@ -25,7 +25,7 @@
 | **Backend** | Go (Golang) 1.22+, Fiber v2 | RESTful API gateway with high throughput. |
 | **ORM** | GORM (Go Object Relational Mapping) | Database schema migrations and fluent querying. |
 | **Database** | PostgreSQL | Relational storage for users, bookings, and products. |
-| **Cache & Limit** | Redis (Upstash / Local) | Token blacklist, session cache, and rate-limiting. |
+| **Cache & Limit** | PostgreSQL | OTP validation, email retry queues, and rate-limiting. |
 | **Payments** | Razorpay SDK | Order creation, signature verification, and webhook handlers. |
 | **Emails** | Resend API | Automated welcome, booking, refund, and support emails. |
 | **AI Engine** | Gemini 1.5 Flash | Content moderation and recommendation intelligence. |
@@ -46,18 +46,18 @@
                       +-----------------------------+
                       |      Go Fiber Backend       |
                       |   (Railway / Port 8080)     |
-                      +-------+---------+--------+--+
-                              |         |        |
-            +-----------------+         |        +-----------------+
-            |                           |                          |
-            v                           v                          v
-+-----------------------+   +-----------------------+   +----------------------+
-|   PostgreSQL Database |   |   Redis Cache & rate  |   |   External Services:  |
-| (Supabase/Production) |   |        limiting       |   | - Razorpay (Payments)|
-+-----------------------+   +-----------------------+   | - Resend (Emails)    |
-                                                        | - Gemini (AI Engine) |
-                                                        | - Cloudinary (Media) |
-                                                        +----------------------+
+                      +-------+------------------+--+
+                              |                  |
+            +-----------------+                  +-----------------+
+            |                                                      |
+            v                                                      v
++-----------------------+                              +----------------------+
+|  Supabase PostgreSQL  |                              |   External Services:  |
+|  (Database & Cache)   |                              | - Razorpay (Payments)|
++-----------------------+                              | - Resend (Emails)    |
+                                                       | - Gemini (AI Engine) |
+                                                       | - Cloudinary (Media) |
+                                                       +----------------------+
 ```
 
 ---
@@ -70,7 +70,6 @@ cp .env.example .env
 ```
 Ensure you update the following sections in your local `.env`:
 *   **Database**: `DB_HOST`, `DB_PORT`, `DB_USER`, `DB_PASSWORD`, `DB_NAME`
-*   **Redis**: `REDIS_URL`
 *   **JWT**: `JWT_SECRET` (at least 32 characters)
 *   **Cloudinary**: `CLOUDINARY_CLOUD_NAME`, `CLOUDINARY_API_KEY`, `CLOUDINARY_API_SECRET`
 *   **Razorpay**: `RAZORPAY_KEY_ID`, `RAZORPAY_KEY_SECRET`, `RAZORPAY_WEBHOOK_SECRET`
@@ -85,7 +84,6 @@ Ensure you update the following sections in your local `.env`:
 *   Go 1.22+
 *   Node.js 18+ (npm or yarn)
 *   PostgreSQL running locally or on Supabase
-*   Redis server (optional, rate limiting fallback active)
 
 ### 1. Backend Service
 ```bash

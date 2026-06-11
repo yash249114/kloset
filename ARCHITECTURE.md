@@ -17,12 +17,12 @@ This document describes the architectural layout, modules, and component interac
              |       Go Fiber Backend       |
              |       (API Host: 8080)       |
              +------------------------------+
-                ||                     ||
-                \/                     \/
-     +-------------------+    +------------------+
-     | PostgreSQL (GORM) |    |   Redis Cache    |
-     |  (Rental/Users)   |    | (Session/Limits) |
-     +-------------------+    +------------------+
+                ||
+                \/
+     +----------------------------------+
+     |        PostgreSQL (GORM)         |
+     | (Rental, Users, Rate Limit, OTP) |
+     +----------------------------------+
 ```
 
 ---
@@ -43,9 +43,9 @@ The Go backend utilizes an layered, domain-focused structure inside the `backend
 
 ## 3. Telemetry, Monitoring, and AIOps
 
-Diagnostics endpoints report real-time database connections pools status, Redis availability, failed mail logs, and error rates:
+Diagnostics endpoints report real-time database connections pools status, failed mail logs, and error rates:
 * `GET /healthz`: Standard DB ping endpoint for health monitoring.
-* `GET /readyz`: Validates both database and Redis memory connectivity.
+* `GET /readyz`: Validates database connectivity.
 * `GET /api/v1/admin/monitoring/diagnostics`: Administrative JSON status dump.
 
 ---
