@@ -132,10 +132,10 @@ export default function AdminListingsPage() {
                   </div>
                 </div>
                 <div className="flex gap-2 flex-shrink-0">
-                  <Button variant="ghost" size="sm" onClick={() => handleApprove(listing.id)} className="text-success hover:bg-success/10">
+                  <Button variant="ghost" onClick={() => handleApprove(listing.id)} className="h-10 px-4 text-success hover:bg-success/10">
                     <Check size={14} /> Approve
                   </Button>
-                  <Button variant="ghost" size="sm" onClick={() => handleReject(listing.id)} className="text-error hover:bg-error/10">
+                  <Button variant="ghost" onClick={() => handleReject(listing.id)} className="h-10 px-4 text-error hover:bg-error/10">
                     <X size={14} /> Reject
                   </Button>
                 </div>

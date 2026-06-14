@@ -424,6 +424,55 @@ export interface AdminLogEntry {
   context?: Record<string, unknown>;
 }
 
+export interface AdminUserEntry {
+  id: string;
+  name: string;
+  email: string;
+  phone: string;
+  role: 'renter' | 'seller' | 'admin';
+  trust_score: number;
+  kyc_status: string;
+  wallet_balance: number;
+  is_verified: boolean;
+  created_at: string;
+}
+
+export interface AdminSellerEntry {
+  id: string;
+  name: string;
+  email: string;
+  phone: string;
+  business_name: string | null;
+  trust_score: number;
+  is_verified: boolean;
+  kyc_status: string;
+  wallet_balance: number;
+  created_at: string;
+}
+
+export interface AdminTransactionEntry {
+  id: string;
+  user_id: string;
+  user_name: string;
+  booking_id: string;
+  booking_ref: string;
+  type: string;
+  amount: number;
+  status: string;
+  gateway: string;
+  created_at: string;
+}
+
+export interface AdminSettings {
+  platform_take_rate: number;
+  gst_rate: number;
+  cleaning_fee: number;
+  min_rental_days: number;
+  max_rental_days: number;
+  security_deposit_multiplier: number;
+  auto_release_days: number;
+}
+
 export const adminAPI = {
   getStats: async (): Promise<AdminStats> => {
     const { data } = await client.get<APIResponse<AdminStats>>('/admin/stats');
@@ -475,6 +524,35 @@ export const adminAPI = {
 
   getLogs: async (): Promise<AdminLogEntry[]> => {
     const { data } = await client.get<APIResponse<AdminLogEntry[]>>('/admin/logs');
+    return data.data || [];
+  },
+
+  getUsers: async (): Promise<AdminUserEntry[]> => {
+    const { data } = await client.get<APIResponse<AdminUserEntry[]>>('/admin/users');
+    return data.data || [];
+  },
+
+  getSellers: async (): Promise<AdminSellerEntry[]> => {
+    const { data } = await client.get<APIResponse<AdminSellerEntry[]>>('/admin/sellers');
+    return data.data || [];
+  },
+
+  getTransactions: async (): Promise<AdminTransactionEntry[]> => {
+    const { data } = await client.get<APIResponse<AdminTransactionEntry[]>>('/admin/transactions');
+    return data.data || [];
+  },
+
+  getSettings: async (): Promise<AdminSettings> => {
+    const { data } = await client.get<APIResponse<AdminSettings>>('/admin/settings');
+    return data.data!;
+  },
+
+  updateSettings: async (payload: Partial<AdminSettings>): Promise<void> => {
+    await client.put('/admin/settings', payload);
+  },
+
+  getRevenueData: async (): Promise<import('@/types').RevenueData[]> => {
+    const { data } = await client.get<APIResponse<import('@/types').RevenueData[]>>('/admin/analytics/revenue');
     return data.data || [];
   },
 };
