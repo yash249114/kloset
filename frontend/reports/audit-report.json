@@ -1,0 +1,85 @@
+{
+  "timestamp": "2026-06-14T18:44:26.757Z",
+  "summary": {
+    "totalPages": 8,
+    "passed": 8,
+    "failed": 0,
+    "successRate": 100
+  },
+  "routeAudits": [
+    {
+      "route": "/",
+      "pageName": "Homepage",
+      "role": "guest",
+      "buttons": [],
+      "workflows": [],
+      "issues": [],
+      "status": "PASS"
+    },
+    {
+      "route": "/discover",
+      "pageName": "Discover Catalog",
+      "role": "guest",
+      "buttons": [],
+      "workflows": [],
+      "issues": [],
+      "status": "PASS"
+    },
+    {
+      "route": "/auth/login",
+      "pageName": "Login Page",
+      "role": "guest",
+      "buttons": [],
+      "workflows": [],
+      "issues": [],
+      "status": "PASS"
+    },
+    {
+      "route": "/auth/register",
+      "pageName": "Register Page",
+      "role": "guest",
+      "buttons": [],
+      "workflows": [],
+      "issues": [],
+      "status": "PASS"
+    },
+    {
+      "route": "/booking/checkout",
+      "pageName": "Checkout",
+      "role": "guest",
+      "buttons": [],
+      "workflows": [],
+      "issues": [],
+      "status": "PASS"
+    },
+    {
+      "route": "/support",
+      "pageName": "Support Page",
+      "role": "guest",
+      "buttons": [],
+      "workflows": [],
+      "issues": [],
+      "status": "PASS"
+    },
+    {
+      "route": "/wishlist",
+      "pageName": "Wishlist",
+      "role": "guest",
+      "buttons": [],
+      "workflows": [],
+      "issues": [],
+      "status": "PASS"
+    },
+    {
+      "route": "/profile",
+      "pageName": "Profile",
+      "role": "guest",
+      "buttons": [],
+      "workflows": [],
+      "issues": [],
+      "status": "PASS"
+    }
+  ],
+  "consoleErrors": [],
+  "accessibilityIssues": []
+}

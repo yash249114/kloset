@@ -5,11 +5,11 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { Mail, Lock, Eye, EyeOff, ArrowRight, Sparkles } from 'lucide-react';
-import { GoogleLogin } from '@react-oauth/google';
 import { toast } from 'sonner';
 import { useAuthStore } from '@/store/useAuthStore';
 import { authAPI } from '@/lib/api';
 import Button from '@/components/ui/Button';
+import GoogleButton from '@/components/auth/GoogleButton';
 
 const springTransition = { type: 'spring' as const, stiffness: 300, damping: 30 };
 
@@ -113,14 +113,11 @@ function AuthLoginForm() {
 
             {/* Google Sign-In */}
             <div className="mb-6">
-              <GoogleLogin
+              <GoogleButton
                 onSuccess={handleGoogleSuccess}
                 onError={() => toast.error('Google sign-in failed.')}
-                theme="outline"
-                size="large"
-                text="signin_with"
-                shape="rectangular"
-                width="100%"
+                variant="outline"
+                className="w-full cursor-pointer"
               />
             </div>
 
