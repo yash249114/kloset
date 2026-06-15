@@ -285,7 +285,7 @@ export default function Homepage() {
         {/* Scroll Rail */}
         <div className="flex gap-6 overflow-x-auto pb-6 scroll-rail snap-x">
           {trending.map((item) => {
-            const imgUrl = String(item.images?.[0]?.url || '/placeholder-outfit.jpg');
+            const imgUrl = String(item.images?.[0]?.url || '/placeholder-outfit.jpg') as string;
             return (
               <motion.div 
                 key={item.id} 
@@ -295,7 +295,7 @@ export default function Homepage() {
               >
                 <div className="h-[380px] relative overflow-hidden bg-ivory-dark">
                   <motion.div whileHover={{ scale: 1.05 }} transition={springTransition} className="w-full h-full">
-                    <Image src={imgUrl} alt={item.title} width={600} height={380} className="w-full h-full object-cover" unoptimized />
+                    <Image src={`${imgUrl}`} alt={item.title || ''} width={600} height={380} className="w-full h-full object-cover" unoptimized />
                   </motion.div>
                   
                   {/* Hover Overlay */}
@@ -457,7 +457,7 @@ export default function Homepage() {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
           <AnimatePresence mode="popLayout">
             {occasionOutfits.map((item, idx) => {
-              const imgUrl = String(item.images?.[0]?.url || '/placeholder-outfit.jpg');
+              const imgUrl = String(item.images?.[0]?.url || '/placeholder-outfit.jpg') as string;
               return (
                 <motion.div
                   key={`${item.id}-${idx}`}
@@ -471,7 +471,7 @@ export default function Homepage() {
                 >
                   <div className="h-[340px] relative overflow-hidden bg-ivory-dark">
                     <motion.div whileHover={{ scale: 1.05 }} transition={springTransition} className="w-full h-full">
-                      <Image src={imgUrl} alt={item.title} width={600} height={340} className="w-full h-full object-cover" unoptimized />
+                      <Image src={`${imgUrl}`} alt={item.title || ''} width={600} height={340} className="w-full h-full object-cover" unoptimized />
                     </motion.div>
                     
                     {/* Hover Link */}
@@ -578,7 +578,7 @@ export default function Homepage() {
                 transition={springTransition}
               >
                 <div className="w-16 h-16 rounded-full overflow-hidden flex-shrink-0 bg-ivory-dark border border-border">
-                  <Image src={sel.image} alt={sel.name} width={64} height={64} unoptimized className="w-full h-full object-cover" />
+                  <Image src={`${sel.image}`} alt={sel.name || ''} width={64} height={64} unoptimized className="w-full h-full object-cover" />
                 </div>
                 <div className="flex-1 space-y-1">
                   <div className="flex items-center gap-2">
@@ -623,7 +623,7 @@ export default function Homepage() {
         {/* 4-col Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
           {newArrivals.map((item) => {
-            const imgUrl = String(item.images?.[0]?.url || '/placeholder-outfit.jpg');
+            const imgUrl = String(item.images?.[0]?.url || '/placeholder-outfit.jpg') as string;
             const showNew = item.isNew;
 
             return (
@@ -643,7 +643,7 @@ export default function Homepage() {
 
                 <div className="h-[320px] relative overflow-hidden bg-ivory-dark">
                   <motion.div whileHover={{ scale: 1.05 }} transition={springTransition} className="w-full h-full">
-                    <Image src={imgUrl} alt={item.title} width={600} height={320} className="w-full h-full object-cover" unoptimized />
+                    <Image src={`${imgUrl}`} alt={item.title || ''} width={600} height={320} className="w-full h-full object-cover" unoptimized />
                   </motion.div>
                   
                   {/* Hover view link */}
@@ -681,7 +681,7 @@ export default function Homepage() {
             // Authenticated Grid view
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
               {trending.map((item, idx) => {
-                const imgUrl = String(item.images?.[0]?.url || '/placeholder-outfit.jpg');
+                const imgUrl = String(item.images?.[0]?.url || '/placeholder-outfit.jpg') as string;
                 return (
                   <motion.div 
                     key={`rec-${item.id}-${idx}`} 
@@ -691,7 +691,7 @@ export default function Homepage() {
                   >
                     <div className="h-[280px] relative overflow-hidden bg-ivory-dark">
                       <motion.div whileHover={{ scale: 1.05 }} transition={springTransition} className="w-full h-full">
-                        <Image src={imgUrl} alt={item.title} width={600} height={280} className="w-full h-full object-cover" unoptimized />
+                        <Image src={`${imgUrl}`} alt={item.title || ''} width={600} height={280} className="w-full h-full object-cover" unoptimized />
                       </motion.div>
                       <div className="absolute inset-0 bg-charcoal/30 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
                         <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} transition={springTransition}>
