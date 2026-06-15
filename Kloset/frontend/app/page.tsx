@@ -285,7 +285,7 @@ export default function Homepage() {
         {/* Scroll Rail */}
         <div className="flex gap-6 overflow-x-auto pb-6 scroll-rail snap-x">
           {trending.map((item) => {
-            const imgUrl = item.images?.[0]?.url || '/placeholder-outfit.jpg';
+            const imgUrl: string = item.images?.[0]?.url || '/placeholder-outfit.jpg';
             return (
               <motion.div 
                 key={item.id} 
@@ -457,7 +457,7 @@ export default function Homepage() {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
           <AnimatePresence mode="popLayout">
             {occasionOutfits.map((item, idx) => {
-              const imgUrl = item.images?.[0]?.url || '/placeholder-outfit.jpg';
+              const imgUrl: string = item.images?.[0]?.url || '/placeholder-outfit.jpg';
               return (
                 <motion.div
                   key={`${item.id}-${idx}`}
@@ -623,7 +623,7 @@ export default function Homepage() {
         {/* 4-col Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
           {newArrivals.map((item) => {
-            const imgUrl = item.images?.[0]?.url || '/placeholder-outfit.jpg';
+            const imgUrl: string = item.images?.[0]?.url || '/placeholder-outfit.jpg';
             const showNew = item.isNew;
 
             return (
@@ -681,7 +681,7 @@ export default function Homepage() {
             // Authenticated Grid view
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
               {trending.map((item, idx) => {
-                const imgUrl = item.images?.[0]?.url || '/placeholder-outfit.jpg';
+                const imgUrl: string = item.images?.[0]?.url || '/placeholder-outfit.jpg';
                 return (
                   <motion.div 
                     key={`rec-${item.id}-${idx}`} 
