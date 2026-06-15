@@ -65,6 +65,7 @@ function CheckoutContent() {
       router.push(`/auth/login?redirect=/booking/checkout${outfitId ? `?outfit_id=${outfitId}` : ''}`);
       return;
     }
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     loadCheckoutData();
   }, [isAuthenticated, authLoading, outfitId]);
 

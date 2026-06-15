@@ -62,18 +62,24 @@ export default function NewOutfitPage() {
     }));
   };
 
-  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = e.target.files;
-    if (!files || files.length === 0) return;
-    const fileArray = Array.from(files);
-    for (const file of fileArray) {
-      const objectUrl = URL.createObjectURL(file);
-      setUploadedImages((prev) => [
-        ...prev,
-        { url: objectUrl, cloudinary_id: `temp_${Date.now()}`, is_primary: prev.length === 0, sort_order: prev.length },
-      ]);
-    }
-  };
+   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+     const files = e.target.files;
+     if (!files || files.length === 0) return;
+     const maxImages = 6;
+     const remaining = maxImages - uploadedImages.length;
+     if (remaining <= 0) {
+       toast.error(`Maximum of ${maxImages} images allowed.`);
+       return;
+     }
+     const fileArray = Array.from(files).slice(0, remaining);
+     for (const file of fileArray) {
+       const objectUrl = URL.createObjectURL(file);
+       setUploadedImages((prev) => [
+         ...prev,
+         { url: objectUrl, cloudinary_id: `temp_${Date.now()}`, is_primary: prev.length === 0, sort_order: prev.length },
+       ]);
+     }
+   };
 
   const removeImage = (index: number) => {
     setUploadedImages((prev) => prev.filter((_, i) => i !== index));

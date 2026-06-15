@@ -259,6 +259,11 @@ export const bookingsAPI = {
   cancel: async (id: string, reason?: string): Promise<void> => {
     await client.post(`/bookings/${id}/cancel`, { reason });
   },
+
+  extend: async (id: string, extraDays: number): Promise<Booking> => {
+    const { data } = await client.patch<APIResponse<Booking>>(`/bookings/${id}/extend`, { extra_days: extraDays });
+    return data.data!;
+  },
 };
 
 // ─── OUTFITS ENDPOINTS ──────────────────────────────

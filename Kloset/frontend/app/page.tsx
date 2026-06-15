@@ -192,14 +192,13 @@ export default function Homepage() {
       
       {/* ────────────────── SECTION 1: HERO ────────────────── */}
       <section className="relative h-[calc(100vh-72px)] min-h-[600px] flex items-center justify-center overflow-hidden bg-charcoal">
-        <motion.div 
-          className="absolute inset-0 bg-cover bg-center opacity-40 filter brightness-75"
-          style={{ backgroundImage: `url('https://images.unsplash.com/photo-1610030470216-5cf4b63ff8cd?auto=format&fit=crop&w=1920&q=80')` }}
-          initial={{ scale: 1.1, opacity: 0 }}
-          animate={{ scale: 1, opacity: 0.4 }}
-          transition={{ ...springSlow, duration: 1.5 }}
-          style={{ willChange: 'transform, opacity' }}
-        />
+         <motion.div 
+           className="absolute inset-0 bg-cover bg-center opacity-40 filter brightness-75"
+           style={{ backgroundImage: `url('https://images.unsplash.com/photo-1610030470216-5cf4b63ff8cd?auto=format&fit=crop&w=1920&q=80')`, willChange: 'transform, opacity' }}
+           initial={{ scale: 1.1, opacity: 0 }}
+           animate={{ scale: 1, opacity: 0.4 }}
+           transition={{ ...springSlow, duration: 1.5 }}
+         />
         
         <div className="absolute inset-0 bg-gradient-to-t from-charcoal/90 via-charcoal/50 to-transparent z-0" />
 
@@ -224,7 +223,7 @@ export default function Homepage() {
           <motion.h1
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ ...springSlow, duration:duration:duration: 0.9 }}
+            transition={{ ...springSlow, duration: 0.9 }}
             className="text-5xl md:text-7xl lg:text-8xl font-display font-semibold text-warm-white leading-none max-w-5xl mx-auto"
             style={{ fontSize: 'clamp(3rem, 7vw, 6rem)', willChange: 'transform, opacity' }}
           >
