@@ -187,6 +187,15 @@ export const authAPI = {
   resetPassword: async (token: string, password: string): Promise<void> => {
     await client.post('/auth/reset-password', { token, password });
   },
+
+  sendEmailOTP: async (email: string): Promise<void> => {
+    await client.post('/auth/send-email-otp', { email });
+  },
+
+  verifyEmailOTP: async (email: string, otp: string): Promise<AuthResponse> => {
+    const { data } = await client.post<APIResponse<AuthResponse>>('/auth/verify-email-otp', { email, otp });
+    return data.data!;
+  },
 };
 
 // ─── BOOKINGS ENDPOINTS ──────────────────────────────
@@ -358,6 +367,135 @@ export const userAPI = {
 
   setDefaultAddress: async (id: string): Promise<void> => {
     await client.put(`/users/addresses/${id}/default`);
+  },
+};
+
+// ─── BANK ACCOUNT ENDPOINTS ──────────────────────────
+export const bankAPI = {
+  list: async (): Promise<import('@/types').BankAccount[]> => {
+    const { data } = await client.get<APIResponse<import('@/types').BankAccount[]>>('/users/bank-accounts');
+    return data.data || [];
+  },
+
+  create: async (payload: { account_holder_name: string; bank_name: string; account_number: string; ifsc_code: string }): Promise<void> => {
+    await client.post('/users/bank-accounts', payload);
+  },
+
+  delete: async (id: string): Promise<void> => {
+    await client.delete(`/users/bank-accounts/${id}`);
+  },
+
+  setDefault: async (id: string): Promise<void> => {
+    await client.put(`/users/bank-accounts/${id}/default`);
+  },
+};
+
+// ─── UPI ID ENDPOINTS ───────────────────────────────
+export const upiAPI = {
+  list: async (): Promise<import('@/types').UPIID[]> => {
+    const { data } = await client.get<APIResponse<import('@/types').UPIID[]>>('/users/upi-ids');
+    return data.data || [];
+  },
+
+  create: async (payload: { upi_id: string }): Promise<void> => {
+    await client.post('/users/upi-ids', payload);
+  },
+
+  delete: async (id: string): Promise<void> => {
+    await client.delete(`/users/upi-ids/${id}`);
+  },
+
+  setDefault: async (id: string): Promise<void> => {
+    await client.put(`/users/upi-ids/${id}/default`);
+  },
+};
+
+// ─── INVENTORY ENDPOINTS ────────────────────────────
+export const inventoryAPI = {
+  list: async (): Promise<import('@/types').InventoryItem[]> => {
+    const { data } = await client.get<APIResponse<import('@/types').InventoryItem[]>>('/seller/inventory');
+    return data.data || [];
+  },
+
+  update: async (outfitId: string, payload: { total_quantity: number }): Promise<void> => {
+    await client.put(`/seller/inventory/${outfitId}`, payload);
+  },
+};
+
+// ─── NOTIFICATIONS ENDPOINTS ─────────────────────────
+export const notificationsAPI = {
+  list: async (page = 1, perPage = 20): Promise<{ notifications: import('@/types').Notification[]; meta: { unread: number; total: number } }> => {
+    const { data } = await client.get('/notifications', { params: { page, per_page: perPage } });
+    return {
+      notifications: data.data || [],
+      meta: data.meta || { unread: 0, total: 0 },
+    };
+  },
+
+  markRead: async (id: string): Promise<void> => {
+    await client.put(`/notifications/${id}/read`);
+  },
+
+  markAllRead: async (): Promise<void> => {
+    await client.put('/notifications/read-all');
+  },
+};
+
+// ─── RETURN TYPES & ENDPOINTS ───────────────────────
+export type ReturnStatus =
+  | 'requested' | 'pickup_scheduled' | 'picked_up'
+  | 'in_inspection' | 'inspection_complete'
+  | 'refund_pending' | 'refund_processed'
+  | 'completed' | 'rejected';
+
+export type InspectionStatus =
+  | 'pending' | 'in_progress' | 'passed'
+  | 'minor_damage' | 'significant_damage';
+
+export type RefundStatus =
+  | 'not_applicable' | 'pending' | 'processing'
+  | 'completed' | 'partially_refunded';
+
+export interface ReturnRequest {
+  id: string;
+  booking_id: string;
+  renter_id: string;
+  seller_id: string;
+  reason: string;
+  description: string | null;
+  status: ReturnStatus;
+  inspection_status: InspectionStatus;
+  refund_status: RefundStatus;
+  deposit_refund_status: RefundStatus;
+  deposit_refund_amount: number | null;
+  refund_amount: number | null;
+  pickup_date: string | null;
+  pickup_scheduled_date: string | null;
+  pickup_completed_at: string | null;
+  outfit_image: string | null;
+  outfit_title: string | null;
+  booking_ref: string | null;
+  inspection_notes: string | null;
+  created_at: string;
+}
+
+export const returnsAPI = {
+  getMyReturns: async (): Promise<ReturnRequest[]> => {
+    const { data } = await client.get<APIResponse<ReturnRequest[]>>('/returns');
+    return data.data || [];
+  },
+
+  getReturnPolicy: async (): Promise<{ return_window_days: number; cancellation_free_days: number; cancellation_fee_percentage: number; late_fee_per_day: number; damage_assessment_policy: string; refund_timeline_days: number } | null> => {
+    try {
+      const { data } = await client.get('/returns/policy');
+      return data.data || null;
+    } catch {
+      return null;
+    }
+  },
+
+  createReturn: async (payload: { booking_id: string; reason: string; description?: string }): Promise<void> => {
+    await client.post('/returns', payload);
   },
 };
 
@@ -682,6 +820,10 @@ export const supportAPI = {
     const res = await client.get('/support/tickets');
     return res.data.data;
   },
+  getTicketById: async (id: string): Promise<import('@/types').SupportTicket> => {
+    const res = await client.get<APIResponse<import('@/types').SupportTicket>>(`/support/tickets/${id}`);
+    return res.data.data!;
+  },
   getAllTickets: async () => {
     const res = await client.get('/admin/support/tickets');
     return res.data.data;
@@ -692,6 +834,10 @@ export const supportAPI = {
   },
   addAgentReply: async (id: string, text: string) => {
     const res = await client.post(`/admin/support/tickets/${id}/reply`, { text });
+    return res.data.data;
+  },
+  addReply: async (id: string, payload: { message: string }) => {
+    const res = await client.post(`/support/tickets/${id}/reply`, payload);
     return res.data.data;
   },
 };

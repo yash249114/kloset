@@ -195,6 +195,7 @@ export interface Booking {
   payment_status: string;
   razorpay_order_id?: string;
   created_at: string;
+  updated_at?: string;
   return_initiated_at?: string;
   returned_at?: string;
   deposit_refund_amount?: number;
@@ -290,5 +291,60 @@ export interface Transaction {
   amount: number;
   status: string;
   gateway: string;
+  created_at: string;
+}
+
+// ─── Support Tickets ─────────────────────────────────
+export interface SupportTicketReply {
+  id: string;
+  sender: string;
+  message: string;
+  created_at: string;
+}
+
+export interface SupportTicket {
+  id: string;
+  subject: string;
+  description: string;
+  status: string;
+  priority?: string;
+  created_at: string;
+  updated_at?: string;
+  replies: SupportTicketReply[];
+}
+
+// ─── Bank Account / UPI / Inventory ──────────────────
+export interface BankAccount {
+  id: string;
+  account_holder_name: string;
+  bank_name: string;
+  account_number: string;
+  ifsc_code: string;
+  is_default: boolean;
+  is_verified: boolean;
+  created_at: string;
+}
+
+export interface UPIID {
+  id: string;
+  upi_id: string;
+  is_default: boolean;
+  is_verified: boolean;
+  created_at: string;
+}
+
+export interface InventoryItem {
+  id: string;
+  outfit_id: string;
+  total_quantity: number;
+  available_quantity: number;
+  reserved_quantity: number;
+  rented_quantity: number;
+  maintenance_quantity: number;
+  quantity_available: number;
+  quantity_reserved: number;
+  quantity_rented: number;
+  quantity_maintenance: number;
+  status: string;
   created_at: string;
 }

@@ -1,8 +1,6 @@
 package messaging
 
 import (
-	"strconv"
-
 	"github.com/gofiber/fiber/v2"
 	"github.com/kloset/backend/pkg/response"
 )
@@ -61,7 +59,7 @@ func (h *Handler) SendMessage(c *fiber.Ctx) error {
 		return response.BadRequest(c, "Invalid request body")
 	}
 
-	if err := h.service.SendMessage(conversationID, userID, req.Content); err != nil {
+	if _, err := h.service.SendMessage(conversationID, userID, req.Content); err != nil {
 		return response.BadRequest(c, err.Error())
 	}
 

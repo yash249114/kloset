@@ -5,7 +5,6 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/kloset/backend/internal/config"
 	"github.com/kloset/backend/internal/logging"
 	"github.com/kloset/backend/internal/notification"
 	"github.com/kloset/backend/internal/user"
@@ -103,13 +102,6 @@ func (s *Service) ListConversations(userID string) ([]map[string]interface{}, er
 	}
 
 	for i := range conversations {
-		var participantID uuid.UUID
-		if conversations[i]["participant1_id"] == userUUID {
-			participantID = conversations[i]["participant2_id"].(uuid.UUID)
-		} else {
-			participantID = conversations[i]["participant1_id"].(uuid.UUID)
-		}
-
 		var unreadCount int64
 		if conversations[i]["participant1_id"] == userUUID {
 			s.db.Table("messages").Where("conversation_id = ? AND sender_id != ? AND read = false", conversations[i]["id"], userUUID).Count(&unreadCount)

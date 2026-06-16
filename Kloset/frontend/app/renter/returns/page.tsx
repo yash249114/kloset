@@ -303,7 +303,7 @@ export default function ReturnsPage() {
                         {/* Image */}
                         <div className="w-full md:w-20 aspect-[3/4] rounded-lg border border-border overflow-hidden bg-ivory-dark flex-shrink-0">
                           {ret.outfit_image ? (
-                            <Image src={ret.outfit_image} alt={ret.outfit_title} fill sizes="(max-width: 768px) 100vw, 80px" className="object-cover" />
+                            <Image src={ret.outfit_image} alt={ret.outfit_title || 'Outfit'} fill sizes="(max-width: 768px) 100vw, 80px" className="object-cover" />
                           ) : (
                             <div className="w-full h-full flex items-center justify-center text-[10px] font-mono text-charcoal-light/40">
                               <Package size={20} />

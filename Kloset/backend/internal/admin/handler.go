@@ -173,7 +173,8 @@ func (h *Handler) GetUsers(c *fiber.Ctx) error {
 
 func (h *Handler) GetSellers(c *fiber.Ctx) error {
 	page, _ := strconv.Atoi(c.Query("page", "1"))
-	perPage, _ := strconv.Atoi(c.Query("per_page", "20"))	status := c.Query("status", "")
+	perPage, _ := strconv.Atoi(c.Query("per_page", "20"))
+	status := c.Query("status", "")
 	sellers, total, err := h.service.ListSellers(page, perPage, status)
 	if err != nil {
 		return response.InternalError(c, err.Error())
@@ -183,7 +184,8 @@ func (h *Handler) GetSellers(c *fiber.Ctx) error {
 
 func (h *Handler) GetTransactions(c *fiber.Ctx) error {
 	page, _ := strconv.Atoi(c.Query("page", "1"))
-	perPage, _ := strconv.Atoi(c.Query("per_page", "20"))	status := c.Query("status", "")
+	perPage, _ := strconv.Atoi(c.Query("per_page", "20"))
+	status := c.Query("status", "")
 	transactions, total, err := h.service.ListTransactions(page, perPage, status)
 	if err != nil {
 		return response.InternalError(c, err.Error())
@@ -193,7 +195,8 @@ func (h *Handler) GetTransactions(c *fiber.Ctx) error {
 
 func (h *Handler) GetBookings(c *fiber.Ctx) error {
 	page, _ := strconv.Atoi(c.Query("page", "1"))
-	perPage, _ := strconv.Atoi(c.Query("per_page", "20"))	status := c.Query("status", "")
+	perPage, _ := strconv.Atoi(c.Query("per_page", "20"))
+	status := c.Query("status", "")
 	bookings, total, err := h.service.ListBookings(page, perPage, status)
 	if err != nil {
 		return response.InternalError(c, err.Error())
@@ -203,7 +206,8 @@ func (h *Handler) GetBookings(c *fiber.Ctx) error {
 
 func (h *Handler) GetPayments(c *fiber.Ctx) error {
 	page, _ := strconv.Atoi(c.Query("page", "1"))
-	perPage, _ := strconv.Atoi(c.Query("per_page", "20"))	status := c.Query("status", "")
+	perPage, _ := strconv.Atoi(c.Query("per_page", "20"))
+	status := c.Query("status", "")
 	payments, total, err := h.service.ListPayments(page, perPage, status)
 	if err != nil {
 		return response.InternalError(c, err.Error())

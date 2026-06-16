@@ -127,3 +127,18 @@ func (r *Repository) HasOverlap(outfitID uuid.UUID, start, end time.Time) (bool,
 		Count(&count).Error
 	return count > 0, err
 }
+
+func (r *Repository) CheckForConflicts(outfitID uuid.UUID, start, end time.Time, excludeID uuid.UUID) error {
+	var count int64
+	err := r.db.Model(&Booking{}).
+		Where("outfit_id = ? AND status NOT IN ('cancelled') AND id != ?", outfitID, excludeID).
+		Where("pickup_date <= ? AND return_date >= ?", end, start).
+		Count(&count).Error
+	if err != nil {
+		return err
+	}
+	if count > 0 {
+		return errors.New("this outfit is already booked for the selected dates")
+	}
+	return nil
+}

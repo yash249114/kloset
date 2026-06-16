@@ -18,7 +18,7 @@ import {
 import { useAuthStore } from '@/store/useAuthStore';
 import { useUIStore } from '@/store/useUIStore';
 import { outfitsAPI, reviewsAPI } from '@/lib/api';
-import type { Outfit } from '@/types';
+import type { Outfit, OutfitCategory } from '@/types';
 import { toast } from 'sonner';
 
 // Mock Backup Data for Editorial Presentation
@@ -202,7 +202,7 @@ export default function Homepage() {
     };
     async function loadOccasion() {
       try {
-        const resp = await outfitsAPI.browse({ category: categoryMap[activeOccasion] as any, per_page: 4 });
+        const resp = await outfitsAPI.browse({ category: categoryMap[activeOccasion] as OutfitCategory, per_page: 4 });
         if (resp && resp.outfits.length > 0) {
           setOccasionOutfits(resp.outfits);
         } else {
