@@ -1,5 +1,0 @@
-Successfully scheduled one-shot timer.
-Expected to fire at: 2026-06-11T11:43:12+05:30
-Prompt: Wake up to check Sentry wizard task status again
-
-[2026-06-11T11:43:12+05:30] Timer fired.

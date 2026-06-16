@@ -1,5 +1,0 @@
-Successfully scheduled one-shot timer.
-Expected to fire at: 2026-06-11T11:43:32+05:30
-Prompt: Check Sentry wizard after 10s
-
-[2026-06-11T11:43:28+05:30] Timer cancelled: agent received a message during wait.

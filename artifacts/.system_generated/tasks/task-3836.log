@@ -1,7 +1,0 @@
-11:39AM INF 🌸 Starting Kloset Database Migration Tool...
-11:39AM INF ✅ All critical configuration parameters verified.
-
-2026/06/11 11:39:19 Y:/swetha/Kloset/backend/internal/database/postgres.go:22
-[error] failed to initialize database, got error failed to connect to `host=aws-1-ap-southeast-1.pooler.supabase.com user=postgres.fzaaxtdxnshyeegggriv database=postgres`: failed SASL auth (FATAL: password authentication failed for user "postgres" (SQLSTATE 28P01))
-11:39AM FTL Failed to connect to database error="failed to connect to PostgreSQL: failed to connect to `host=aws-1-ap-southeast-1.pooler.supabase.com user=postgres.fzaaxtdxnshyeegggriv database=postgres`: failed SASL auth (FATAL: password authentication failed for user \"postgres\" (SQLSTATE 28P01))"
-exit status 1

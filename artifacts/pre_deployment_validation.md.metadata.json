@@ -1,6 +1,0 @@
-{
-  "artifactType": "ARTIFACT_TYPE_OTHER",
-  "summary": "Comprehensive pre-deployment validation report covering email system failures, payment gateway verification, deployment readiness, production security hardening, and final go/no-go recommendation with specific remediation steps for each blocker.",
-  "updatedAt": "2026-06-08T14:39:16.810580900Z",
-  "requestFeedback": true
-}

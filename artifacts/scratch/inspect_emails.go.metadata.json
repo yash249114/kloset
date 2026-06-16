@@ -1,5 +1,0 @@
-{
-  "artifactType": "ARTIFACT_TYPE_OTHER",
-  "summary": "Scratch script to query and analyze email failure logs in the Postgres database.",
-  "updatedAt": "2026-06-08T13:48:53.438234600Z"
-}

@@ -1,5 +1,0 @@
-{
-  "artifactType": "ARTIFACT_TYPE_OTHER",
-  "summary": "Render Deployment Failure Audit report explaining the CORS panic and providing a code fix and environment variable corrections.",
-  "updatedAt": "2026-06-11T10:50:00.878907700Z"
-}

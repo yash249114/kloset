@@ -1,7 +1,0 @@
-Successfully scheduled one-shot timer.
-Expected to fire at: 2026-06-11T11:53:40+05:30
-Prompt: Check if Docker daemon has started (attempt 2)
-
-[2026-06-11T11:53:25+05:30] Still waiting. Remaining time: 15s
-[2026-06-11T11:53:35+05:30] Still waiting. Remaining time: 5s
-[2026-06-11T11:53:40+05:30] Timer fired.

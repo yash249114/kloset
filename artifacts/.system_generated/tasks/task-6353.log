@@ -1,6 +1,0 @@
-Successfully scheduled one-shot timer.
-Expected to fire at: 2026-06-13T09:57:08+05:30
-Prompt: Check if next build has finished
-
-[2026-06-13T09:57:03+05:30] Still waiting. Remaining time: 5s
-[2026-06-13T09:57:08+05:30] Timer fired.

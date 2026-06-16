@@ -1,3 +1,0 @@
-# github.com/kloset/backend/internal/booking
-internal\booking\model.go:7:2: "gorm.io/gorm" imported and not used
-internal\booking\service.go:18:2: "gorm.io/gorm" imported and not used

@@ -1,7 +1,0 @@
-Successfully scheduled one-shot timer.
-Expected to fire at: 2026-06-13T10:43:07+05:30
-Prompt: Wait for Next.js build compilation to complete post-processing
-
-[2026-06-13T10:42:37+05:30] Still waiting. Remaining time: 30s
-[2026-06-13T10:42:47+05:30] Still waiting. Remaining time: 20s
-[2026-06-13T10:42:50+05:30] Timer cancelled: agent received a message during wait.

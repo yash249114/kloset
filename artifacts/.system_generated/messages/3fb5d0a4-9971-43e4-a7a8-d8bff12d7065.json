@@ -1,1 +1,0 @@
-{"id":"3fb5d0a4-9971-43e4-a7a8-d8bff12d7065","recipient":"a7517cdd-6a36-476f-a4af-c6f1d3dc69f0","sender":"a7517cdd-6a36-476f-a4af-c6f1d3dc69f0/task-4182","priority":"MESSAGE_PRIORITY_HIGH","timestamp":"2026-06-11T06:23:06.228541500Z","renderDetails":{"messageTitle":"Wait for Docker engine: Timer has expired"},"content":"Check if Docker daemon has started"}

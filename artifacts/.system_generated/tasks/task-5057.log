@@ -1,5 +1,0 @@
-Successfully scheduled one-shot timer.
-Expected to fire at: 2026-06-12T11:59:56+05:30
-Prompt: Verify dev server log output
-
-[2026-06-12T11:59:56+05:30] Timer fired.

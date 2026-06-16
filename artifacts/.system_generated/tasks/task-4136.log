@@ -1,1 +1,0 @@
-next.config.ts(38,3): error TS2561: Object literal may only specify known properties, but 'hideSourceMaps' does not exist in type 'SentryBuildOptions'. Did you mean to write 'sourcemaps'?

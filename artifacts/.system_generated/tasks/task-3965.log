@@ -1,6 +1,0 @@
-Successfully scheduled one-shot timer.
-Expected to fire at: 2026-06-11T11:44:26+05:30
-Prompt: Check status of posthog-js installation
-
-[2026-06-11T11:44:21+05:30] Still waiting. Remaining time: 5s
-[2026-06-11T11:44:22+05:30] Timer cancelled: agent received a message during wait.

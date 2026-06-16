@@ -1,5 +1,0 @@
-{
-  "artifactType": "ARTIFACT_TYPE_OTHER",
-  "summary": "A detailed audit of 14 platform services for Kloset, evaluating files used, environment variables, missing configuration/implementation, and production readiness, alongside an exact score matrix.",
-  "updatedAt": "2026-06-10T13:14:01.107753600Z"
-}

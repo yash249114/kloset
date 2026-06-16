@@ -1,8 +1,0 @@
-Successfully scheduled one-shot timer.
-Expected to fire at: 2026-06-13T10:52:29+05:30
-Prompt: Wait for third Next.js build compilation to finish page generation
-
-[2026-06-13T10:51:59+05:30] Still waiting. Remaining time: 30s
-[2026-06-13T10:52:09+05:30] Still waiting. Remaining time: 20s
-[2026-06-13T10:52:19+05:30] Still waiting. Remaining time: 10s
-[2026-06-13T10:52:30+05:30] Timer fired.

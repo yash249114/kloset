@@ -1,7 +1,0 @@
-Successfully scheduled one-shot timer.
-Expected to fire at: 2026-06-14T15:05:45+05:30
-Prompt: Check Next.js build status
-
-[2026-06-14T15:05:25+05:30] Still waiting. Remaining time: 20s
-[2026-06-14T15:05:35+05:30] Still waiting. Remaining time: 10s
-[2026-06-14T15:05:45+05:30] Timer fired.

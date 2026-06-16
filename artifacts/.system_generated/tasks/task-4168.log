@@ -1,5 +1,0 @@
-Successfully scheduled one-shot timer.
-Expected to fire at: 2026-06-11T11:52:18+05:30
-Prompt: Check Go build status after 10s
-
-[2026-06-11T11:52:14+05:30] Timer cancelled: agent received a message during wait.

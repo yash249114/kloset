@@ -1,6 +1,0 @@
-{"level":"info","time":"2026-06-07T23:21:45+05:30","message":"🌱 Starting Kloset Database Seeding..."}
-
-2026/06/07 23:21:45 Y:/swetha/Kloset/backend/internal/database/postgres.go:22
-[error] failed to initialize database, got error failed to connect to `host=localhost user=postgres database=kloset`: dial error (dial tcp 127.0.0.1:5432: connectex: No connection could be made because the target machine actively refused it.)
-{"level":"fatal","error":"failed to connect to PostgreSQL: failed to connect to `host=localhost user=postgres database=kloset`: dial error (dial tcp 127.0.0.1:5432: connectex: No connection could be made because the target machine actively refused it.)","time":"2026-06-07T23:21:45+05:30","message":"Failed to connect to database for seeding"}
-exit status 1

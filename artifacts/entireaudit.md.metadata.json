@@ -1,6 +1,0 @@
-{
-  "artifactType": "ARTIFACT_TYPE_OTHER",
-  "summary": "Complete production audit and frontend rebuild plan for Kloset. Covers: Google OAuth audit, Razorpay payment audit, Chatbot audit, AI features audit, Admin panel audit, Recommendation engine audit, Session persistence audit, UX audit with all identified problems, and a full frontend rebuild specification. Each section includes current state, identified failures, root causes, and required fixes.",
-  "updatedAt": "2026-06-12T06:05:17.829975300Z",
-  "requestFeedback": true
-}

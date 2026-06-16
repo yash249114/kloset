@@ -1,1 +1,0 @@
-{"id":"93cf4157-f100-4b79-9350-f0e421bcb415","recipient":"a7517cdd-6a36-476f-a4af-c6f1d3dc69f0","sender":"a7517cdd-6a36-476f-a4af-c6f1d3dc69f0/task-1392","priority":"MESSAGE_PRIORITY_HIGH","timestamp":"2026-06-07T17:48:40.878774800Z","renderDetails":{"messageTitle":"Schedule 30s wakeup: Timer has expired"},"content":"Check if Docker daemon is online (retry 3)"}

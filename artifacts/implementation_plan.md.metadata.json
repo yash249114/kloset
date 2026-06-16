@@ -1,6 +1,0 @@
-{
-  "artifactType": "ARTIFACT_TYPE_IMPLEMENTATION_PLAN",
-  "summary": "Detailed implementation plan for Phase 2 rebuild of Kloset frontend. Specifies the files to be created, styling configuration, Zustand store shapes, UI component behaviors, page layouts, checkout flow, admin screens, and the verification plan.",
-  "updatedAt": "2026-06-13T09:59:39.511646900Z",
-  "requestFeedback": true
-}

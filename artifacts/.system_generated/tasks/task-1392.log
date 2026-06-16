@@ -1,7 +1,0 @@
-Successfully scheduled one-shot timer.
-Expected to fire at: 2026-06-07T23:18:40+05:30
-Prompt: Check if Docker daemon is online (retry 3)
-
-[2026-06-07T23:18:20+05:30] Still waiting. Remaining time: 20s
-[2026-06-07T23:18:30+05:30] Still waiting. Remaining time: 10s
-[2026-06-07T23:18:40+05:30] Timer fired.

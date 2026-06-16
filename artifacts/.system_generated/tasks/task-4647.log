@@ -1,7 +1,0 @@
-At line:1 char:30
-+ cd y:\swetha\Kloset\frontend && npx next build 2>&1 | Select-Object - ...
-+                              ~~
-The token '&&' is not a valid statement separator in this version.
-    + CategoryInfo          : ParserError: (:) [], ParentContainsErrorRecordException
-    + FullyQualifiedErrorId : InvalidEndOfLine
- 

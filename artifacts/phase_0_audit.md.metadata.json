@@ -1,6 +1,0 @@
-{
-  "artifactType": "ARTIFACT_TYPE_OTHER",
-  "summary": "Complete audit and contract extraction inventory for Kloset frontend rebuild, capturing all API endpoints, auth configuration, environment variables, Zustand stores, third-party integrations, and business logic.",
-  "updatedAt": "2026-06-13T09:59:04.349406600Z",
-  "requestFeedback": true
-}

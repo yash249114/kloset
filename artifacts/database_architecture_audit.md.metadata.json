@@ -1,5 +1,0 @@
-{
-  "artifactType": "ARTIFACT_TYPE_OTHER",
-  "summary": "Formal database architecture decision audit report comparing SQL migrations and GORM AutoMigrate, illustrating constraint/index conflict risks and recommending SQL-only schema ownership for production launch.",
-  "updatedAt": "2026-06-11T06:44:29.043385400Z"
-}

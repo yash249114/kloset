@@ -1,5 +1,0 @@
-Successfully scheduled one-shot timer.
-Expected to fire at: 2026-06-11T11:59:30+05:30
-Prompt: Verify backend server is listening
-
-[2026-06-11T11:59:30+05:30] Timer fired.

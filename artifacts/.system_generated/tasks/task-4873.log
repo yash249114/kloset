@@ -1,8 +1,0 @@
-Successfully scheduled one-shot timer.
-Expected to fire at: 2026-06-12T11:53:55+05:30
-Prompt: Final check of the build task status.
-
-[2026-06-12T11:53:20+05:30] Still waiting. Remaining time: 35s
-[2026-06-12T11:53:30+05:30] Still waiting. Remaining time: 25s
-[2026-06-12T11:53:40+05:30] Still waiting. Remaining time: 15s
-[2026-06-12T11:53:42+05:30] Timer cancelled: context done.

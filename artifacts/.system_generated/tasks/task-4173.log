@@ -1,7 +1,0 @@
-2026-06-11T11:52:23+05:30 INF 🌸 Starting Kloset API Server...
-2026-06-11T11:52:23+05:30 INF ✅ All critical configuration parameters verified.
-
-2026/06/11 11:52:25 Y:/swetha/Kloset/backend/internal/database/postgres.go:22
-[error] failed to initialize database, got error failed to connect to `host=aws-1-ap-southeast-1.pooler.supabase.com user=postgres.fzaaxtdxnshyeegggriv database=postgres`: failed SASL auth (FATAL: password authentication failed for user "postgres" (SQLSTATE 28P01))
-2026-06-11T11:52:25+05:30 FTL Failed to connect to PostgreSQL error="failed to connect to PostgreSQL: failed to connect to `host=aws-1-ap-southeast-1.pooler.supabase.com user=postgres.fzaaxtdxnshyeegggriv database=postgres`: failed SASL auth (FATAL: password authentication failed for user \"postgres\" (SQLSTATE 28P01))"
-exit status 1
