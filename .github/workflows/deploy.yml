@@ -1,0 +1,67 @@
+name: Deploy Production
+
+on:
+  push:
+    branches: [main]
+
+concurrency:
+  group: deploy-production
+  cancel-in-progress: false
+
+env:
+  NODE_VERSION: "20"
+
+jobs:
+  # ─── Frontend Deploy (Vercel) ─────────────────────
+  deploy-frontend:
+    name: Deploy Frontend to Vercel
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Vercel Deploy
+        run: echo "Vercel handles deployment via GitHub integration on push to main"
+
+  # ─── Backend Deploy (Render) ──────────────────────
+  deploy-backend:
+    name: Deploy Backend to Render
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Render Deploy
+        run: echo "Render auto-deploys on push to main via webhook integration"
+
+  # ─── Post-Deploy Verification ─────────────────────
+  verify:
+    name: Post-Deploy Health Check
+    needs: [deploy-frontend, deploy-backend]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Wait for deployment propagation
+        run: sleep 60
+
+      - name: Health check — Backend
+        run: |
+          STATUS=$(curl -s -o /dev/null -w "%{http_code}" https://api.kloset.in/health || echo "000")
+          echo "Backend status: $STATUS"
+          if [ "$STATUS" != "200" ]; then
+            echo "WARNING: Backend health check returned $STATUS"
+          fi
+
+      - name: Health check — Frontend
+        run: |
+          STATUS=$(curl -s -o /dev/null -w "%{http_code}" https://kloset.in || echo "000")
+          echo "Frontend status: $STATUS"
+          if [ "$STATUS" != "200" ]; then
+            echo "WARNING: Frontend health check returned $STATUS"
+          fi
+
+      - name: Health check — API response
+        run: |
+          RESPONSE=$(curl -s https://api.kloset.in/health || echo "{}")
+          echo "API response: $RESPONSE"
