@@ -19,10 +19,12 @@ export interface UploadProgress {
 export async function uploadImage(
   file: File,
   onProgress?: (progress: UploadProgress) => void,
-  _folder = 'kloset/outfits'
+  folder = 'kloset/outfits'
 ): Promise<CloudinaryUploadResult> {
   const formData = new FormData();
   formData.append('file', file);
+  formData.append('upload_preset', CLOUDINARY_UPLOAD_PRESET);
+  formData.append('folder', folder);
 
   return new Promise((resolve, reject) => {
     const xhr = new XMLHttpRequest();

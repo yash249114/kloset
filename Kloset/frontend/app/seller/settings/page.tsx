@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Building, Smartphone, Plus, Trash2, Check, ShieldCheck, AlertTriangle } from 'lucide-react';
+import { Building, Smartphone, Plus, Trash2, ShieldCheck } from 'lucide-react';
 import { toast } from 'sonner';
 import { bankAPI, upiAPI } from '@/lib/api';
 import type { BankAccount, UPIID } from '@/types';
@@ -43,7 +43,8 @@ export default function SellerSettingsPage() {
   };
 
   useEffect(() => {
-    loadData();
+    const init = async () => { await loadData(); };
+    init();
   }, []);
 
   const validateUPI = (upi: string): string | null => {

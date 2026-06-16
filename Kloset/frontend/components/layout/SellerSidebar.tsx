@@ -1,6 +1,5 @@
 'use client';
 
-import React from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { LayoutDashboard, PlusCircle, ShoppingBag, BarChart3, Wallet, ArrowLeft, LogOut, Package, Settings, MessageSquare, Star, LifeBuoy, User } from 'lucide-react';

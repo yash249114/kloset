@@ -1,8 +1,9 @@
 'use client';
 
-import React, { useState, useEffect, Suspense } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
+import Image from 'next/image';
 import { motion } from 'framer-motion';
 import { Calendar, MapPin, ShieldCheck, CreditCard, ArrowLeft, Lock, Sparkles } from 'lucide-react';
 import { toast } from 'sonner';
@@ -39,19 +40,21 @@ function CheckoutContent() {
       router.push(`/auth/login?redirect=/booking/checkout${outfitId ? `?outfit_id=${outfitId}` : ''}`);
       return;
     }
-    loadCheckoutData();
-  }, [isAuthenticated, authLoading]);
+  }, [isAuthenticated, authLoading, outfitId]);
 
   const loadCheckoutData = async () => {
     setLoading(true);
     try {
       const id = outfitId || (cartItems.length > 0 ? cartItems[0].id : null);
-      if (id) {
-        const outfitData = await outfitsAPI.getById(id);
-        setOutfit(outfitData);
-        if (outfitData.sizes && outfitData.sizes.length > 0) {
-          setSelectedSize(outfitData.sizes[0]);
-        }
+      if (!id) {
+        toast.error('No outfit selected for checkout.');
+        router.push('/cart');
+        return;
+      }
+      const outfitData = await outfitsAPI.getById(id);
+      setOutfit(outfitData);
+      if (outfitData.sizes && outfitData.sizes.length > 0) {
+        setSelectedSize(outfitData.sizes[0]);
       }
       if (user) {
         const { userAPI } = await import('@/lib/api');
@@ -66,6 +69,13 @@ function CheckoutContent() {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    if (!authLoading && isAuthenticated) {
+      const init = async () => { await loadCheckoutData(); };
+      init();
+    }
+  }, [isAuthenticated, authLoading, outfitId]);
 
   const handlePlaceOrder = async () => {
     if (!outfit) return;
@@ -118,7 +128,7 @@ function CheckoutContent() {
       });
 
       if (result.status === 'success') {
-        const paymentResp = result.response as any;
+        const paymentResp = result.response as { razorpay_payment_id?: string; razorpay_signature?: string };
         await paymentsAPI.verify({
           razorpay_order_id: razorpayOrderId,
           razorpay_payment_id: paymentResp.razorpay_payment_id,
@@ -188,8 +198,8 @@ function CheckoutContent() {
               >
                 <Card padding="md" className="bg-white border-border">
                   <div className="flex gap-4">
-                    <div className="w-24 h-32 rounded-lg overflow-hidden bg-ivory-dark flex-shrink-0">
-                      <img src={outfit.images?.[0]?.url || ''} alt={outfit.title} className="w-full h-full object-cover" />
+                    <div className="w-24 h-32 rounded-lg overflow-hidden bg-ivory-dark flex-shrink-0 relative">
+                      <Image src={outfit.images?.[0]?.url || ''} alt={outfit.title} fill sizes="96px" className="object-cover" />
                     </div>
                     <div>
                       <Badge variant="gold">{outfit.category}</Badge>

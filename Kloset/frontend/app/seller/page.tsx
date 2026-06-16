@@ -3,11 +3,10 @@
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
-import { Plus, DollarSign, Star, Calendar, RefreshCcw, LayoutGrid, TrendingUp, Eye, Package, ArrowRight } from 'lucide-react';
+import { Plus, DollarSign, Star, Calendar, RefreshCcw, LayoutGrid, TrendingUp, Package, ArrowRight } from 'lucide-react';
 import { useAuthStore } from '@/store/useAuthStore';
 import { outfitsAPI, bookingsAPI } from '@/lib/api';
 import type { Booking } from '@/types';
-import Card from '@/components/ui/Card';
 import Badge from '@/components/ui/Badge';
 
 const springTransition = { type: 'spring' as const, stiffness: 300, damping: 30 };
@@ -64,7 +63,8 @@ export default function SellerDashboardPage() {
   };
 
   useEffect(() => {
-    loadData();
+    const init = async () => { await loadData(); };
+    init();
   }, []);
 
   const totalEarnings = bookings

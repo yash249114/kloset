@@ -1,8 +1,8 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { DollarSign, RefreshCcw, CreditCard } from 'lucide-react';
+import { DollarSign, RefreshCcw } from 'lucide-react';
 import { adminAPI } from '@/lib/api';
 import type { AdminTransactionEntry, AdminStats } from '@/lib/api';
 import Card from '@/components/ui/Card';
@@ -29,7 +29,10 @@ export default function AdminPaymentsPage() {
     }
   };
 
-  useEffect(() => { loadPayments(); }, []);
+  useEffect(() => {
+    const init = async () => { await loadPayments(); };
+    init();
+  }, []);
 
   const springTransition = { type: 'spring' as const, stiffness: 300, damping: 30 };
 
@@ -110,7 +113,7 @@ export default function AdminPaymentsPage() {
                     <td className="py-4 text-[#8C8C8C] font-mono uppercase">{t.gateway}</td>
                     <td className="py-4 text-[#8C8C8C]">{new Date(t.created_at).toLocaleDateString()}</td>
                     <td className="py-4 text-right">
-                      <Badge variant={t.status === 'successful' ? 'success' : t.status === 'pending' ? 'gold' : 'error'}>{t.status}</Badge>
+                      <Badge variant={t.status === 'completed' ? 'sage' : t.status === 'pending' ? 'gold' : 'error'}>{t.status}</Badge>
                     </td>
                   </tr>
                 ))}

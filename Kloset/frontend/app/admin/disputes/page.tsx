@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { AlertCircle, Scale, RefreshCcw } from 'lucide-react';
+import { Scale, RefreshCcw } from 'lucide-react';
 import { adminAPI, AdminDispute } from '@/lib/api';
 import Card from '@/components/ui/Card';
 import Badge from '@/components/ui/Badge';
@@ -17,7 +17,7 @@ export default function AdminDisputesPage() {
   
   // Resolution states
   const [selectedDispute, setSelectedDispute] = useState<AdminDispute | null>(null);
-  const [resolution, setResolution] = useState('refund_renter');
+  const [resolution, setResolution] = useState('full_refund_renter');
   const [note, setNote] = useState('');
   const [refundAmount, setRefundAmount] = useState(0);
   const [resolving, setResolving] = useState(false);
@@ -164,9 +164,9 @@ export default function AdminDisputesPage() {
                 onChange={(e) => setResolution(e.target.value)}
                 className="w-full h-[52px] px-4 border border-border bg-warm-white rounded outline-none text-xs font-mono uppercase tracking-wider text-charcoal"
               >
-                <option value="refund_renter">100% Refund Renter (Release Escrow)</option>
-                <option value="payout_seller">100% Payout Host (Forfeit Deposit)</option>
-                <option value="split_resolution">Split Escrow Release</option>
+                <option value="full_refund_renter">100% Refund Renter (Release Escrow)</option>
+                <option value="full_release_seller">100% Payout Host (Forfeit Deposit)</option>
+                <option value="split">Split Escrow Release</option>
               </select>
             </div>
 

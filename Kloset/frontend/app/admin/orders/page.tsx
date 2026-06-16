@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Search, RefreshCcw, Eye } from 'lucide-react';
 import { adminAPI } from '@/lib/api';
@@ -27,7 +27,10 @@ export default function AdminOrdersPage() {
     }
   };
 
-  useEffect(() => { loadOrders(); }, []);
+  useEffect(() => {
+    const init = async () => { await loadOrders(); };
+    init();
+  }, []);
 
   const filteredOrders = query
     ? orders.filter(o =>

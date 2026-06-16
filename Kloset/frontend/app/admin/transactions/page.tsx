@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { RefreshCcw, CreditCard, DollarSign } from 'lucide-react';
 import { adminAPI, AdminTransactionEntry } from '@/lib/api';
@@ -26,13 +26,14 @@ export default function AdminTransactionsPage() {
   };
 
   useEffect(() => {
-    loadTransactions();
+    const init = async () => { await loadTransactions(); };
+    init();
   }, []);
 
   const filtered = txs.filter((t) => filter === 'all' || t.status === filter);
 
   const totalAmount = txs.reduce((sum, t) => sum + t.amount, 0);
-  const successfulCount = txs.filter((t) => t.status === 'successful').length;
+  const successfulCount = txs.filter((t) => t.status === 'completed').length;
 
   const springTransition = { type: 'spring' as const, stiffness: 300, damping: 30 };
 
@@ -83,7 +84,7 @@ export default function AdminTransactionsPage() {
 
       {/* Filters */}
       <div className="flex gap-2">
-        {['all', 'successful', 'pending', 'failed'].map((f) => (
+        {['all', 'completed', 'pending', 'failed'].map((f) => (
           <button
             key={f}
             onClick={() => setFilter(f)}
@@ -144,8 +145,8 @@ export default function AdminTransactionsPage() {
                     <td className="py-4 text-right">
                       <Badge
                         variant={
-                          t.status === 'successful'
-                            ? 'success'
+                          t.status === 'completed'
+                            ? 'sage'
                             : t.status === 'pending'
                             ? 'gold'
                             : 'error'

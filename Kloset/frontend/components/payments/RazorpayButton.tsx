@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { toast } from 'sonner';
 import { loadRazorpayScript, openRazorpay } from '@/lib/razorpay';
 import Button from '@/components/ui/Button';

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Bell, Check, Loader2 } from 'lucide-react';
 import { notificationsAPI } from '@/lib/api';
@@ -34,7 +34,8 @@ export default function SellerNotificationsPage() {
   };
 
   useEffect(() => {
-    fetchNotifications(1);
+    const init = async () => { await fetchNotifications(1); };
+    init();
   }, []);
 
   const handleMarkRead = async (id: string) => {

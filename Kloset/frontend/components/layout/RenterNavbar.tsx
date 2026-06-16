@@ -1,9 +1,9 @@
 'use client';
 
-import React, { useState } from 'react';
+import { useState } from 'react';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
-import { ShoppingBag, User, LogOut, LayoutDashboard, Menu, Sparkles, MessageSquare, Phone } from 'lucide-react';
+import { ShoppingBag, User, LogOut, LayoutDashboard, Menu, Sparkles } from 'lucide-react';
 import { useAuthStore } from '@/store/useAuthStore';
 import { useCartStore } from '@/store/useCartStore';
 import { useUIStore } from '@/store/useUIStore';
@@ -17,7 +17,7 @@ export default function RenterNavbar() {
   const cartItems = useCartStore((s) => s.cartItems);
   const setCartOpen = useUIStore((s) => s.setCartOpen);
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
-  const [aiStylistOpen, setAIStylistOpen] = useState(false);
+  const [, setAIStylistOpen] = useState(false);
 
   const cartCount = cartItems.reduce((acc, item) => acc + item.quantity, 0);
 

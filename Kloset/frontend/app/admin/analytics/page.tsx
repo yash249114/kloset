@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { RefreshCcw, BarChart2, DollarSign, Users, Package, TrendingUp } from 'lucide-react';
 import { adminAPI, AdminStats } from '@/lib/api';
@@ -33,7 +33,8 @@ export default function AdminAnalyticsPage() {
   };
 
   useEffect(() => {
-    loadStats();
+    const init = async () => { await loadStats(); };
+    init();
   }, []);
 
   const springTransition = { type: 'spring' as const, stiffness: 300, damping: 30 };

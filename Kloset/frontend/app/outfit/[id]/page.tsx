@@ -1,8 +1,9 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
+import Image from 'next/image';
 import { motion } from 'framer-motion';
 import { Star, Calendar, MapPin, ShieldCheck, ChevronLeft, Heart, ShoppingBag, Sparkles, Check, MessageSquare, Truck, Shield, RotateCcw, Award } from 'lucide-react';
 import { toast } from 'sonner';
@@ -13,7 +14,6 @@ import { useCartStore } from '@/store/useCartStore';
 import type { Outfit, ReviewResponse } from '@/types';
 import Button from '@/components/ui/Button';
 import Badge from '@/components/ui/Badge';
-import Card from '@/components/ui/Card';
 import { OutfitDetailSkeleton } from '@/components/ui/Skeleton';
 
 const springTransition = { type: 'spring' as const, stiffness: 300, damping: 30 };
@@ -33,7 +33,7 @@ export default function OutfitDetailPage() {
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
   const [reviews, setReviews] = useState<ReviewResponse[]>([]);
-  const [reviewsLoading, setReviewsLoading] = useState(false);
+  const [reviewsLoading] = useState(false);
   const [recommendations, setRecommendations] = useState<Outfit[]>([]);
   const [isImageZoomed, setIsImageZoomed] = useState(false);
   const [zoomPosition, setZoomPosition] = useState({ x: 0, y: 0 });
@@ -223,13 +223,13 @@ export default function OutfitDetailPage() {
                     onClick={() => setSelectedImageIndex(idx)}
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
-                    className={`w-20 h-20 rounded-xl overflow-hidden border-2 flex-shrink-0 cursor-pointer transition-all duration-300 ${
+                    className={`w-20 h-20 rounded-xl overflow-hidden border-2 flex-shrink-0 cursor-pointer transition-all duration-300 relative ${
                       idx === selectedImageIndex
                         ? 'border-champagne shadow-md ring-2 ring-champagne/20'
                         : 'border-border/60 hover:border-champagne/50 opacity-70 hover:opacity-100'
                     }`}
                   >
-                    <img src={img.url} alt="" className="w-full h-full object-cover" />
+                    <Image src={img.url} alt="" fill sizes="80px" className="object-cover" />
                   </motion.button>
                 ))}
               </div>
@@ -549,8 +549,9 @@ export default function OutfitDetailPage() {
                     className="bg-white border border-border/60 rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-shadow duration-300"
                   >
                     <div className="aspect-[3/4] bg-gradient-to-br from-ivory-dark to-ivory overflow-hidden relative">
-                      <img src={rec.images?.[0]?.url || ''} alt={rec.title}
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                      <Image src={rec.images?.[0]?.url || ''} alt={rec.title}
+                        fill sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
+                        className="object-cover group-hover:scale-105 transition-transform duration-500" />
                       <div className="absolute inset-0 bg-gradient-to-t from-charcoal/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                     </div>
                     <div className="p-4 space-y-1.5">

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Search, Star, ShieldCheck, RefreshCcw } from 'lucide-react';
 import { adminAPI, AdminSellerEntry } from '@/lib/api';
@@ -26,7 +26,8 @@ export default function AdminSellersPage() {
   };
 
   useEffect(() => {
-    loadSellers();
+    const init = async () => { await loadSellers(); };
+    init();
   }, []);
 
   const filtered = sellers.filter(

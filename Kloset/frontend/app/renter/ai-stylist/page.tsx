@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -29,12 +29,6 @@ interface ChatMessage {
   timestamp: string;
 }
 
-const INITIAL_BOT_MESSAGE: ChatMessage = {
-  sender: 'bot',
-  text: 'Namaste! Welcome to Kloset. I am your AI Stylist, powered by Gemini. How can I help you find or care for the perfect heritage outfit today?',
-  timestamp: 'Just now',
-};
-
 const STORAGE_KEY = 'kloset_ai_messages';
 
 export default function AIStylistHistoryPage() {
@@ -58,13 +52,16 @@ export default function AIStylistHistoryPage() {
         if (stored) {
           try {
             const parsed = JSON.parse(stored);
-            setMessages(Array.isArray(parsed) ? parsed : []);
+            const load = () => { setMessages(Array.isArray(parsed) ? parsed : []); };
+            load();
           } catch {
-            setMessages([]);
+            const fail = () => { setMessages([]); };
+            fail();
           }
         }
       }
-      setLoading(false);
+      const done = () => { setLoading(false); };
+      done();
     }, 0);
     return () => clearTimeout(timer);
   }, [isAuthenticated, authLoading]);

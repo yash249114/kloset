@@ -1,9 +1,9 @@
 'use client';
 
-import React from 'react';
 import { motion } from 'framer-motion';
 import { Trash2, ShoppingBag, ArrowRight } from 'lucide-react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { useCartStore, calculateRentalDays } from '@/store/useCartStore';
 import Button from '@/components/ui/Button';
 
@@ -75,11 +75,13 @@ export default function CartPage() {
                 animate={{ opacity: 1, x: 0 }}
                 className="flex gap-4 p-4 bg-white border border-border rounded-xl"
               >
-                <div className="w-24 h-24 rounded-lg overflow-hidden flex-shrink-0">
-                  <img
+                <div className="w-24 h-24 rounded-lg overflow-hidden flex-shrink-0 relative">
+                  <Image
                     src={item.image}
                     alt={item.title}
-                    className="w-full h-full object-cover"
+                    fill
+                    sizes="96px"
+                    className="object-cover"
                   />
                 </div>
                 <div className="flex-1 min-w-0">

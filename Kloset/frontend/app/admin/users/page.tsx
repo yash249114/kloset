@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Search, Star, RefreshCcw, X, Check } from 'lucide-react';
 import { adminAPI, AdminUserEntry } from '@/lib/api';
@@ -29,7 +29,8 @@ export default function AdminUsersPage() {
   };
 
   useEffect(() => {
-    loadUsers();
+    const init = async () => { await loadUsers(); };
+    init();
   }, []);
 
   const toggleBan = async (userId: string, name: string, currentlyBanned: boolean) => {

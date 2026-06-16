@@ -1,6 +1,5 @@
 'use client';
 
-import React from 'react';
 import { motion } from 'framer-motion';
 import { ShieldCheck, Sparkles, RefreshCw, UserCheck, Truck, Award } from 'lucide-react';
 import { fadeUp, staggerContainer, easeConfig } from './animations';

@@ -18,9 +18,6 @@ import type {
   UPIIDPayload,
   InventoryItem,
   InventoryUpdatePayload,
-  SupportTicket,
-  TicketReply,
-  TicketReplyPayload,
   Notification,
   ReviewResponse,
 } from '@/types';

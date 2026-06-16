@@ -1,8 +1,9 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import Image from 'next/image';
 import { motion } from 'framer-motion';
 import { Calendar, Inbox, ChevronRight, Truck } from 'lucide-react';
 import { toast } from 'sonner';
@@ -36,7 +37,8 @@ export default function DashboardOrdersPage() {
       router.push('/auth/login?redirect=/dashboard/orders');
       return;
     }
-    loadBookings();
+    const init = async () => { await loadBookings(); };
+    init();
   }, [isAuthenticated, authLoading]);
 
   const getStatusColor = (status: string) => {
@@ -83,9 +85,9 @@ export default function DashboardOrdersPage() {
               <motion.div key={booking.id} whileHover={{ y: -2 }} transition={springTransition}
                 className="bg-white border border-border rounded-xl p-5 flex items-start gap-4"
               >
-                <div className="w-16 h-20 rounded-lg overflow-hidden bg-ivory-dark flex-shrink-0">
+                <div className="w-16 h-20 rounded-lg overflow-hidden bg-ivory-dark flex-shrink-0 relative">
                   {booking.outfit?.images?.[0] ? (
-                    <img src={booking.outfit.images[0].url} alt="" className="w-full h-full object-cover" />
+                    <Image src={booking.outfit.images[0].url} alt="" fill sizes="64px" className="object-cover" />
                   ) : (
                     <div className="w-full h-full flex items-center justify-center text-[8px] text-charcoal-light/40">No Img</div>
                   )}

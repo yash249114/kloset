@@ -1,8 +1,9 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import Image from 'next/image';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   ChevronRight,
@@ -10,13 +11,11 @@ import {
   Truck,
   Search,
   CheckCircle2,
-  Clock,
   AlertTriangle,
   ShieldCheck,
   RotateCcw,
   Calendar,
   FileText,
-  Inbox,
   ChevronDown,
   ChevronUp,
   Shield,
@@ -128,14 +127,11 @@ export default function ReturnsPage() {
       router.push('/auth/login?redirect=/renter/returns');
       return;
     }
-  }, [isAuthenticated, authLoading]);
-
-  useEffect(() => {
-    if (isAuthenticated && !loading) {
-      const load = async () => { await loadData(); };
-      load();
+    if (!authLoading && isAuthenticated) {
+      const init = async () => { await loadData(); };
+      init();
     }
-  }, [isAuthenticated, loading]);
+  }, [isAuthenticated, authLoading]);
 
   const loadCompletedBookings = async () => {
     try {
@@ -307,7 +303,7 @@ export default function ReturnsPage() {
                         {/* Image */}
                         <div className="w-full md:w-20 aspect-[3/4] rounded-lg border border-border overflow-hidden bg-ivory-dark flex-shrink-0">
                           {ret.outfit_image ? (
-                            <img src={ret.outfit_image} alt={ret.outfit_title} className="w-full h-full object-cover" />
+                            <Image src={ret.outfit_image} alt={ret.outfit_title} fill sizes="(max-width: 768px) 100vw, 80px" className="object-cover" />
                           ) : (
                             <div className="w-full h-full flex items-center justify-center text-[10px] font-mono text-charcoal-light/40">
                               <Package size={20} />
@@ -495,7 +491,7 @@ export default function ReturnsPage() {
                       }`}
                     >
                       {b.outfit?.images?.[0] ? (
-                        <img src={b.outfit.images[0].url} alt="" className="w-10 h-12 rounded object-cover flex-shrink-0" />
+                        <Image src={b.outfit.images[0].url} alt="" fill sizes="40px" className="object-cover rounded" />
                       ) : (
                         <div className="w-10 h-12 rounded bg-ivory-dark flex items-center justify-center flex-shrink-0">
                           <Package size={14} className="text-charcoal-light/40" />

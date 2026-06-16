@@ -1,15 +1,14 @@
 'use client';
 
-import React, { useState, useEffect, useCallback, Suspense } from 'react';
+import { useState, useEffect, useCallback, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
-import { SlidersHorizontal, X, Star, Search, RotateCcw, LayoutGrid, Sparkles, Filter, ChevronDown } from 'lucide-react';
+import { X, Star, Search, RotateCcw, LayoutGrid, Sparkles, Filter, ChevronDown } from 'lucide-react';
 import { outfitsAPI } from '@/lib/api';
 import type { Outfit, OutfitCategory } from '@/types';
 import Button from '@/components/ui/Button';
 import Badge from '@/components/ui/Badge';
-import Card from '@/components/ui/Card';
 import { Z_INDEX } from '@/lib/constants';
 
 const CATEGORY_OPTIONS: { label: string; value: OutfitCategory }[] = [
@@ -335,7 +334,7 @@ function DiscoverContent() {
         >
           <span className="text-[9px] font-mono uppercase tracking-wider text-charcoal-light font-bold mr-1">Active:</span>
           <AnimatePresence>
-            {activeFilterChips.map((chip, i) => (
+            {activeFilterChips.map((chip) => (
               <motion.span
                 key={chip.label}
                 initial={{ opacity: 0, scale: 0.8 }}

@@ -2,10 +2,9 @@
 
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { ShieldAlert, Users, Calendar, DollarSign, Activity, RefreshCcw, TrendingUp, AlertTriangle, CheckCircle, Clock } from 'lucide-react';
+import { ShieldAlert, Users, Calendar, DollarSign, Activity, RefreshCcw, TrendingUp, AlertTriangle } from 'lucide-react';
 import { adminAPI, AdminStats } from '@/lib/api';
 import type { RevenueData } from '@/types';
-import Card from '@/components/ui/Card';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { toast } from 'sonner';
 
@@ -110,9 +109,9 @@ export default function AdminOverviewPage() {
   };
 
   useEffect(() => {
-    loadStats();
+    const init = async () => { await loadStats(); };
+    init();
   }, []);
-
   return (
     <motion.div
       initial={{ opacity: 0, y: 15 }}

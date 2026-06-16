@@ -1,6 +1,7 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
+import Image from 'next/image';
 import { motion } from 'framer-motion';
 import { Package, RefreshCcw, AlertTriangle, CheckCircle } from 'lucide-react';
 import { toast } from 'sonner';
@@ -8,7 +9,6 @@ import { inventoryAPI, outfitsAPI } from '@/lib/api';
 import type { InventoryItem, Outfit } from '@/types';
 import Card from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
-import Badge from '@/components/ui/Badge';
 import Input from '@/components/ui/Input';
 
 const STATUS_CONFIG: Record<string, { color: string; bg: string; label: string }> = {
@@ -43,7 +43,8 @@ export default function SellerInventoryPage() {
   };
 
   useEffect(() => {
-    loadData();
+    const init = async () => { await loadData(); };
+    init();
   }, []);
 
   const handleUpdateQuantity = async (outfitId: string) => {
@@ -135,7 +136,7 @@ export default function SellerInventoryPage() {
                 <Card hoverEffect={false} padding="md" className="bg-white border-border flex flex-col sm:flex-row items-start sm:items-center gap-4 justify-between">
                   <div className="flex items-center gap-4 flex-1">
                     <div className="w-14 h-16 rounded overflow-hidden bg-ivory-dark border border-border flex-shrink-0">
-                      <img src={getOutfitImage(item.outfit_id)} alt={getOutfitTitle(item.outfit_id)} className="w-full h-full object-cover" />
+                      <Image src={getOutfitImage(item.outfit_id)} alt={getOutfitTitle(item.outfit_id)} fill sizes="56px" className="object-cover" />
                     </div>
                     <div className="space-y-1 min-w-0">
                       <h4 className="font-display text-sm font-semibold text-charcoal truncate">{getOutfitTitle(item.outfit_id)}</h4>

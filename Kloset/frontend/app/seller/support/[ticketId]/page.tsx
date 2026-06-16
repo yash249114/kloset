@@ -7,7 +7,7 @@ import { ArrowLeft, Send, MessageSquare, Clock, AlertCircle } from 'lucide-react
 import Link from 'next/link';
 import { toast } from 'sonner';
 import { supportAPI } from '@/lib/api';
-import type { SupportTicket, TicketReplyPayload } from '@/types';
+import type { SupportTicket } from '@/types';
 import Card from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
 import Badge from '@/components/ui/Badge';
@@ -41,7 +41,8 @@ export default function TicketDetailPage() {
   };
 
   useEffect(() => {
-    loadTicket();
+    const init = async () => { await loadTicket(); };
+    init();
   }, [ticketId]);
 
 const handleReply = async (e: React.FormEvent) => {

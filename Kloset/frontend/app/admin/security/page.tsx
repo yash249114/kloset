@@ -6,6 +6,7 @@ import { Shield, RefreshCcw, AlertTriangle, CheckCircle2, Clock } from 'lucide-r
 import { adminAPI } from '@/lib/api';
 import type { AdminLogEntry } from '@/lib/api';
 import Card from '@/components/ui/Card';
+import { toast } from 'sonner';
 
 export default function AdminSecurityPage() {
   const [logs, setLogs] = useState<AdminLogEntry[]>([]);
@@ -18,23 +19,27 @@ export default function AdminSecurityPage() {
       setLogs(resp || []);
     } catch {
       setLogs([]);
+      toast.error('Failed to load security logs.');
     } finally {
       setLoading(false);
     }
   };
 
-  useEffect(() => { loadLogs(); }, []);
+  useEffect(() => {
+    const init = async () => { await loadLogs(); };
+    init();
+  }, []);
 
   const springTransition = { type: 'spring' as const, stiffness: 300, damping: 30 };
 
+  const [now] = useState(() => Date.now());
   const { recentLogCount, errorCount, last24hCount } = useMemo(() => {
-    const now = Date.now();
     return {
       recentLogCount: logs.filter(l => new Date(l.timestamp) > new Date(now - 30 * 24 * 60 * 60 * 1000)).length,
       errorCount: logs.filter(l => l.level === 'error').length,
       last24hCount: logs.filter(l => new Date(l.timestamp) > new Date(now - 24 * 60 * 60 * 1000)).length,
     };
-  }, [logs]);
+  }, [logs, now]);
 
   return (
     <motion.div

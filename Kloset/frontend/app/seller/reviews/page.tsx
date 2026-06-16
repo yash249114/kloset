@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { Star, MessageSquare } from 'lucide-react';
 import { reviewsAPI } from '@/lib/api';

@@ -9,7 +9,6 @@ export interface PremiumCardProps extends Omit<HTMLMotionProps<'div'>, 'children
   padding?: 'none' | 'sm' | 'md' | 'lg';
   hoverable?: boolean;
   className?: string;
-  asChild?: boolean;
 }
 
 const variantStyles = {
@@ -34,7 +33,6 @@ export default function PremiumCard({
   padding = 'md',
   hoverable = false,
   className = '',
-  asChild = false,
   style,
   ...props
 }: PremiumCardProps) {

@@ -1,7 +1,7 @@
 'use client';
 
-import React from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { motion } from 'framer-motion';
 import { ArrowRight, ShieldCheck, TrendingUp, DollarSign } from 'lucide-react';
 import { fadeUp, easeConfig } from './animations';
@@ -76,10 +76,12 @@ export default function SellerCTA() {
 
             <div className="hidden lg:block relative">
               <div className="aspect-[4/5] rounded-2xl overflow-hidden relative">
-                <img
+                <Image
                   src="https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=800&q=85"
                   alt="Seller"
-                  className="w-full h-full object-cover"
+                  fill
+                  sizes="(max-width: 1024px) 0vw, 40vw"
+                  className="object-cover"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-charcoal/40 to-transparent" />
               </div>

@@ -1,8 +1,8 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Activity, RefreshCcw, Cpu, CheckCircle, AlertTriangle, Zap, Clock, BarChart3, AlertOctagon, ShieldAlert, Server } from 'lucide-react';
+import { Activity, RefreshCcw, Cpu, Zap, BarChart3, AlertOctagon, Server } from 'lucide-react';
 import { adminAPI, AIOpsResponse } from '@/lib/api';
 import Card from '@/components/ui/Card';
 import Badge from '@/components/ui/Badge';
@@ -54,8 +54,7 @@ export default function AdminAIOpsPage() {
   const [data, setData] = useState<AIOpsResponse | null>(null);
   const [alerts, setAlerts] = useState<AdminAlert[]>([]);
   const [incidents, setIncidents] = useState<AdminIncident[]>([]);
-  const [systemHealth, setSystemHealth] = useState<any>(null);
-  const [revenue, setRevenue] = useState<any>(null);
+
   const [loading, setLoading] = useState(true);
   const [pulse, setPulse] = useState(true);
 
@@ -63,18 +62,15 @@ export default function AdminAIOpsPage() {
     if (!silent) setLoading(true);
     setPulse(true);
     try {
-      const [resp, alertsData, incidentsData, systemHealthData, revenueData] = await Promise.all([
+      const [resp, alertsData, incidentsData] = await Promise.all([
         adminAPI.getAIOps(),
         fetch('/api/admin/monitoring/alerts').then(res => res.json()),
         fetch('/api/admin/monitoring/incidents').then(res => res.json()),
-        fetch('/api/admin/monitoring/system-health').then(res => res.json()),
-        fetch('/api/admin/monitoring/revenue').then(res => res.json()),
       ]);
       setData(resp);
       setAlerts(alertsData.data || alertsData || []);
       setIncidents(incidentsData.data || incidentsData || []);
-      setSystemHealth(systemHealthData.data || systemHealthData);
-      setRevenue(revenueData.data || revenueData);
+
     } catch {
       toast.error('Failed to load AIOps data.');
     } finally {
@@ -84,7 +80,8 @@ export default function AdminAIOpsPage() {
   };
 
   useEffect(() => {
-    loadOps();
+    const init = async () => { await loadOps(); };
+    init();
     const interval = setInterval(() => loadOps(true), 30000);
     return () => clearInterval(interval);
   }, []);
