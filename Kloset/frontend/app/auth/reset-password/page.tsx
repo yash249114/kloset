@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { Lock, Eye, EyeOff, ArrowRight, CheckCircle } from 'lucide-react';
 import { toast } from 'sonner';
+import { isAxiosError } from 'axios';
 import { authAPI } from '@/lib/api';
 import Button from '@/components/ui/Button';
 
@@ -42,8 +43,9 @@ function ResetPasswordForm() {
       setSuccess(true);
       toast.success('Password reset successfully!');
       setTimeout(() => router.push('/auth/login'), 2000);
-    } catch {
-      toast.error('Invalid or expired reset token. Please try again.');
+    } catch (err: unknown) {
+      const msg = isAxiosError(err) ? err.response?.data?.error : '';
+      toast.error(msg || 'Invalid or expired reset token. Please try again.');
     } finally {
       setLoading(false);
     }

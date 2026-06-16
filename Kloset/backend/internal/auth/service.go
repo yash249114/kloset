@@ -3,6 +3,7 @@ package auth
 import (
 	"context"
 	"crypto/rand"
+	"encoding/hex"
 	"errors"
 	"fmt"
 	"math/big"
@@ -13,6 +14,7 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/google/uuid"
 	"github.com/kloset/backend/internal/config"
+	"github.com/kloset/backend/internal/email"
 	"github.com/kloset/backend/internal/logging"
 	"github.com/kloset/backend/internal/notification"
 	"github.com/kloset/backend/pkg/utils"
@@ -22,25 +24,26 @@ import (
 
 // Service handles auth business logic
 type Service struct {
-	repo     *Repository
-	config   *config.Config
-	notifSvc *notification.Service
-	logSvc   *logging.Service
+	repo       *Repository
+	config     *config.Config
+	notifSvc   *notification.Service
+	logSvc     *logging.Service
+	emailSvc   *email.Service
 }
 
 // NewService creates a new auth service
-func NewService(repo *Repository, cfg *config.Config, notifSvc *notification.Service, logSvc *logging.Service) *Service {
+func NewService(repo *Repository, cfg *config.Config, notifSvc *notification.Service, logSvc *logging.Service, emailSvc *email.Service) *Service {
 	return &Service{
-		repo:     repo,
-		config:   cfg,
-		notifSvc: notifSvc,
-		logSvc:   logSvc,
+		repo:       repo,
+		config:     cfg,
+		notifSvc:   notifSvc,
+		logSvc:     logSvc,
+		emailSvc:   emailSvc,
 	}
 }
 
-// Register creates a new user account
-func (s *Service) Register(req *RegisterRequest) (*AuthResponse, error) {
-	// Check if email already exists
+// Register creates a new user account (unverified) and sends email OTP
+func (s *Service) Register(req *RegisterRequest) (*UserResponse, error) {
 	existing, err := s.repo.FindByEmail(req.Email)
 	if err != nil {
 		return nil, err
@@ -49,7 +52,6 @@ func (s *Service) Register(req *RegisterRequest) (*AuthResponse, error) {
 		return nil, errors.New("email already registered")
 	}
 
-	// Check if phone already exists
 	existing, err = s.repo.FindByPhone(req.Phone)
 	if err != nil {
 		return nil, err
@@ -58,44 +60,35 @@ func (s *Service) Register(req *RegisterRequest) (*AuthResponse, error) {
 		return nil, errors.New("phone number already registered")
 	}
 
-	// Hash password
 	hashedPassword, err := utils.HashPassword(req.Password)
 	if err != nil {
 		return nil, errors.New("failed to process password")
 	}
 
-	// Create user
 	user := &User{
 		Name:         req.Name,
 		Email:        req.Email,
 		Phone:        req.Phone,
 		PasswordHash: hashedPassword,
 		Role:         req.Role,
+		IsVerified:   false,
 	}
 
 	if err := s.repo.CreateUser(user); err != nil {
 		return nil, errors.New("failed to create account")
 	}
 
-	// Trigger welcome notification & email
-	if s.notifSvc != nil {
-		_ = s.notifSvc.Create(
-			user.ID.String(),
-			"welcome",
-			"Welcome to Kloset! ✨",
-			"We are delighted to welcome you to our exclusive fashion rental ecosystem. Your wardrobe just expanded.",
-			[]string{"in_app", "email"},
-			nil,
-		)
+	// Send email OTP for verification
+	if err := s.SendEmailOTP(req.Email); err != nil {
+		return nil, fmt.Errorf("failed to send verification code: %w", err)
 	}
 
-	// Log audit event
 	if s.logSvc != nil {
-		s.logSvc.LogEvent(req.Email, "User registered successfully with role: "+req.Role, "127.0.0.1", "info")
+		s.logSvc.LogEvent(req.Email, "User registered with role: "+req.Role+" (unverified, OTP sent)", "127.0.0.1", "info")
 	}
 
-	// Generate tokens
-	return s.generateAuthResponse(user)
+	resp := user.ToUserResponse()
+	return &resp, nil
 }
 
 // Login authenticates a user with email and password
@@ -119,6 +112,13 @@ func (s *Service) Login(req *LoginRequest) (*AuthResponse, error) {
 			s.logSvc.LogEvent(req.Email, "Suspended user tried to log in", "127.0.0.1", "warn")
 		}
 		return nil, errors.New("account has been suspended")
+	}
+
+	if !user.IsVerified {
+		if s.logSvc != nil {
+			s.logSvc.LogEvent(req.Email, "Unverified user tried to log in", "127.0.0.1", "warn")
+		}
+		return nil, errors.New("email not verified. Please verify your email before logging in")
 	}
 
 	if !utils.CheckPassword(req.Password, user.PasswordHash) {
@@ -460,6 +460,239 @@ func (s *Service) VerifyOTP(phone string, code string) (bool, error) {
 	}
 
 	return true, nil
+}
+
+// SendEmailOTP sends a 6-digit OTP to the user's email via Resend
+func (s *Service) SendEmailOTP(emailAddr string) error {
+	now := time.Now()
+
+	var verification EmailOTPVerification
+	err := s.repo.db.Where("email = ?", emailAddr).First(&verification).Error
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			verification = EmailOTPVerification{
+				Email:         emailAddr,
+				Code:          "",
+				ExpiresAt:     now,
+				CooldownUntil: now,
+				Attempts:      0,
+				SendCount:     0,
+				WindowStart:   now,
+			}
+			if err := s.repo.db.Create(&verification).Error; err != nil {
+				return fmt.Errorf("failed to initialize email verification record: %w", err)
+			}
+		} else {
+			return fmt.Errorf("failed to fetch email verification record: %w", err)
+		}
+	}
+
+	// Cooldown check (60 seconds between sends)
+	if now.Before(verification.CooldownUntil) {
+		return errors.New("please wait 60 seconds before requesting another code")
+	}
+
+	// Rate limiting check (max 3 OTP requests in 10 minutes)
+	if now.Before(verification.WindowStart.Add(10 * time.Minute)) {
+		if verification.SendCount >= 3 {
+			return errors.New("maximum OTP request limit exceeded, please try again in 10 minutes")
+		}
+		verification.SendCount++
+	} else {
+		verification.WindowStart = now
+		verification.SendCount = 1
+	}
+
+	// Generate secure random 6-digit code
+	valNum, _ := rand.Int(rand.Reader, big.NewInt(900000))
+	otpCode := fmt.Sprintf("%06d", valNum.Int64()+100000)
+
+	verification.Code = otpCode
+	verification.ExpiresAt = now.Add(10 * time.Minute)
+	verification.CooldownUntil = now.Add(60 * time.Second)
+	verification.Attempts = 0
+
+	if err := s.repo.db.Save(&verification).Error; err != nil {
+		return fmt.Errorf("failed to update email verification details: %w", err)
+	}
+
+	// Send OTP via Resend email service
+	if s.emailSvc != nil {
+		emailErr := s.emailSvc.SendOTP(emailAddr, otpCode)
+		if emailErr != nil {
+			fmt.Printf("Failed to send OTP email to %s: %v\n", emailAddr, emailErr)
+		}
+	}
+
+	fmt.Printf("Email OTP sent to %s: %s (expires in 10 minutes)\n", emailAddr, otpCode)
+	return nil
+}
+
+// SendEmailOTPByUserID sends an OTP to the email address of a user by their ID
+func (s *Service) SendEmailOTPByUserID(userID string) error {
+	id, err := uuid.Parse(userID)
+	if err != nil {
+		return errors.New("invalid user ID")
+	}
+
+	user, err := s.repo.FindByID(id)
+	if err != nil || user == nil {
+		return errors.New("user not found")
+	}
+
+	return s.SendEmailOTP(user.Email)
+}
+
+// VerifyEmailOTP checks the OTP code and marks the user as verified
+func (s *Service) VerifyEmailOTP(emailAddr string, code string) (*AuthResponse, error) {
+	now := time.Now()
+
+	var verification EmailOTPVerification
+	err := s.repo.db.Where("email = ?", emailAddr).First(&verification).Error
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, errors.New("verification code has expired or is invalid")
+		}
+		return nil, fmt.Errorf("failed to fetch verification record: %w", err)
+	}
+
+	// Check max attempts (3)
+	if verification.Attempts >= 3 {
+		if now.Before(verification.ExpiresAt) {
+			return nil, errors.New("maximum verification attempts exceeded, email verification is locked")
+		}
+	}
+
+	// Check expiry
+	if now.After(verification.ExpiresAt) {
+		return nil, errors.New("verification code has expired")
+	}
+
+	if verification.Code != code {
+		verification.Attempts++
+		if saveErr := s.repo.db.Save(&verification).Error; saveErr != nil {
+			return nil, fmt.Errorf("failed to update verification attempts: %w", saveErr)
+		}
+		return nil, errors.New("invalid verification code")
+	}
+
+	// Success — clear code and mark user verified
+	verification.Code = ""
+	verification.Attempts = 0
+	if saveErr := s.repo.db.Save(&verification).Error; saveErr != nil {
+		return nil, fmt.Errorf("failed to clear verification record: %w", saveErr)
+	}
+
+	// Find user and mark as verified
+	user, err := s.repo.FindByEmail(emailAddr)
+	if err != nil || user == nil {
+		return nil, errors.New("user not found")
+	}
+
+	if err := s.repo.db.Model(user).Update("is_verified", true).Error; err != nil {
+		return nil, fmt.Errorf("failed to update user verification status: %w", err)
+	}
+
+	user.IsVerified = true
+
+	// Log successful verification
+	if s.logSvc != nil {
+		s.logSvc.LogEvent(user.Email, "Email verified successfully via OTP", "127.0.0.1", "info")
+	}
+
+	// Generate auth tokens (auto-login)
+	return s.generateAuthResponse(user)
+}
+
+// ForgotPassword generates a reset token, stores it hashed, and sends a reset link via email
+func (s *Service) ForgotPassword(req *ForgotPasswordRequest) error {
+	user, err := s.repo.FindByEmail(req.Email)
+	if err != nil {
+		return err
+	}
+	if user == nil {
+		// Don't reveal whether the email exists; just return success
+		return nil
+	}
+
+	// Invalidate any existing unused tokens for this email
+	_ = s.repo.InvalidatePasswordResetTokens(req.Email)
+
+	// Generate a cryptographically random token
+	tokenBytes := make([]byte, 32)
+	if _, err := rand.Read(tokenBytes); err != nil {
+		return errors.New("failed to generate reset token")
+	}
+	rawToken := hex.EncodeToString(tokenBytes)
+	tokenHash := HashToken(rawToken)
+
+	resetToken := &PasswordResetToken{
+		Email:     req.Email,
+		TokenHash: tokenHash,
+		ExpiresAt: time.Now().Add(1 * time.Hour),
+	}
+
+	if err := s.repo.StorePasswordResetToken(resetToken); err != nil {
+		return errors.New("failed to store reset token")
+	}
+
+	// Send password reset email with the raw token
+	if s.emailSvc != nil {
+		if emailErr := s.emailSvc.SendPasswordReset(req.Email, rawToken); emailErr != nil {
+			fmt.Printf("Failed to send password reset email to %s: %v\n", req.Email, emailErr)
+		}
+	}
+
+	if s.logSvc != nil {
+		s.logSvc.LogEvent(req.Email, "Password reset requested", "127.0.0.1", "info")
+	}
+
+	return nil
+}
+
+// ResetPassword validates a reset token and updates the user's password
+func (s *Service) ResetPassword(req *ResetPasswordRequest) error {
+	tokenHash := HashToken(req.Token)
+
+	resetToken, err := s.repo.FindPasswordResetToken(tokenHash)
+	if err != nil {
+		return err
+	}
+	if resetToken == nil {
+		return errors.New("invalid or expired reset token")
+	}
+
+	// Find the user
+	user, err := s.repo.FindByEmail(resetToken.Email)
+	if err != nil {
+		return err
+	}
+	if user == nil {
+		return errors.New("user not found")
+	}
+
+	// Hash the new password
+	hashedPassword, err := utils.HashPassword(req.NewPassword)
+	if err != nil {
+		return errors.New("failed to process password")
+	}
+
+	// Update password in database
+	if err := s.repo.db.Model(user).Update("password_hash", hashedPassword).Error; err != nil {
+		return errors.New("failed to update password")
+	}
+
+	// Mark the token as used
+	_ = s.repo.MarkPasswordResetTokenUsed(resetToken.ID)
+
+	// Invalidate all refresh tokens for security (force re-login)
+	_ = s.repo.DeleteUserRefreshTokens(user.ID)
+
+	if s.logSvc != nil {
+		s.logSvc.LogEvent(user.Email, "Password reset completed successfully", "127.0.0.1", "info")
+	}
+
+	return nil
 }
 
 func getEnvVar(key, fallback string) string {

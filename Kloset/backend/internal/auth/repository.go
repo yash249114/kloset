@@ -93,3 +93,31 @@ func (r *Repository) DeleteRefreshToken(tokenHash string) error {
 func (r *Repository) DeleteUserRefreshTokens(userID uuid.UUID) error {
 	return r.db.Where("user_id = ?", userID).Delete(&RefreshToken{}).Error
 }
+
+// StorePasswordResetToken saves a new password reset token
+func (r *Repository) StorePasswordResetToken(token *PasswordResetToken) error {
+	return r.db.Create(token).Error
+}
+
+// FindPasswordResetToken finds a valid, unused password reset token by its hash
+func (r *Repository) FindPasswordResetToken(tokenHash string) (*PasswordResetToken, error) {
+	var token PasswordResetToken
+	err := r.db.Where("token_hash = ? AND used = false AND expires_at > NOW()", tokenHash).First(&token).Error
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, nil
+		}
+		return nil, err
+	}
+	return &token, nil
+}
+
+// MarkPasswordResetTokenUsed marks a reset token as used
+func (r *Repository) MarkPasswordResetTokenUsed(id uuid.UUID) error {
+	return r.db.Model(&PasswordResetToken{}).Where("id = ?", id).Update("used", true).Error
+}
+
+// InvalidatePasswordResetTokens marks all existing tokens for an email as used
+func (r *Repository) InvalidatePasswordResetTokens(email string) error {
+	return r.db.Model(&PasswordResetToken{}).Where("email = ? AND used = false", email).Update("used", true).Error
+}

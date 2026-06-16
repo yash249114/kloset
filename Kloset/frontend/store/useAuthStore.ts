@@ -78,14 +78,7 @@ export const useAuthStore = create<AuthState>()(
           : null;
 
         if (!token) {
-          set({
-            user: null,
-            accessToken: null,
-            refreshToken: null,
-            isAuthenticated: false,
-            isLoading: false,
-            isInitialized: true,
-          });
+          set({ isLoading: false, isInitialized: true });
           return;
         }
 
@@ -95,12 +88,8 @@ export const useAuthStore = create<AuthState>()(
           if (typeof window !== 'undefined') {
             document.cookie = 'kloset-auth=true; path=/; max-age=604800; SameSite=Lax; Secure';
           }
-          const accessToken = typeof window !== 'undefined' ? localStorage.getItem('kloset_access_token') : null;
-          const refreshToken = typeof window !== 'undefined' ? localStorage.getItem('kloset_refresh_token') : null;
           set({
             user,
-            accessToken,
-            refreshToken,
             isAuthenticated: true,
             isLoading: false,
             isInitialized: true,
@@ -133,7 +122,10 @@ export const useAuthStore = create<AuthState>()(
         isAuthenticated: state.isAuthenticated,
       }),
       onRehydrateStorage: () => (state) => {
-        if (state) state.isInitialized = false;
+        if (state) {
+          state.isInitialized = true;
+          state.isLoading = false;
+        }
       },
     }
   )

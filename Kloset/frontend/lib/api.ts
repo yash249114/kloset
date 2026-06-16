@@ -11,14 +11,36 @@ import type {
   CreateOutfitPayload,
   Address,
   AddAddressPayload,
-  PaginationMeta
+  PaginationMeta,
+  BankAccount,
+  BankAccountPayload,
+  UPIID,
+  UPIIDPayload,
+  InventoryItem,
+  InventoryUpdatePayload,
+  SupportTicket,
+  TicketReply,
+  TicketReplyPayload,
+  Notification,
 } from '@/types';
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080/api/v1';
+const API_URL = process.env.NEXT_PUBLIC_API_URL;
+
+if (!API_URL) {
+  if (process.env.NODE_ENV === 'production') {
+    throw new Error(
+      'NEXT_PUBLIC_API_URL is not set. Configure it in Vercel environment variables or .env.production.'
+    );
+  }
+  // Development fallback — warn but proceed
+  console.warn(
+    '[Kloset] NEXT_PUBLIC_API_URL not set. Using default http://localhost:8080/api/v1'
+  );
+}
 
 // Create Axios Client
 export const client = axios.create({
-  baseURL: API_URL,
+  baseURL: API_URL || 'http://localhost:8080/api/v1',
   timeout: 15000,
   headers: {
     'Content-Type': 'application/json',
@@ -87,7 +109,6 @@ client.interceptors.response.use(
         localStorage.removeItem('kloset_access_token');
         localStorage.removeItem('kloset_refresh_token');
         localStorage.removeItem('kloset_user');
-        localStorage.removeItem('kloset-auth');
         if (typeof window !== 'undefined') {
           document.cookie = 'kloset-auth=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; SameSite=Lax';
           const pathname = window.location.pathname;
@@ -125,7 +146,6 @@ client.interceptors.response.use(
         localStorage.removeItem('kloset_access_token');
         localStorage.removeItem('kloset_refresh_token');
         localStorage.removeItem('kloset_user');
-        localStorage.removeItem('kloset-auth');
         if (typeof window !== 'undefined') {
           document.cookie = 'kloset-auth=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; SameSite=Lax';
           const pathname = window.location.pathname;
@@ -148,9 +168,16 @@ client.interceptors.response.use(
 );
 
 // ─── AUTH ENDPOINTS ──────────────────────────────────
+
+export interface RegisterResponse {
+  user: User;
+  requires_otp: boolean;
+  message: string;
+}
+
 export const authAPI = {
-  register: async (payload: RegisterPayload): Promise<AuthResponse> => {
-    const { data } = await client.post<APIResponse<AuthResponse>>('/auth/register', payload);
+  register: async (payload: RegisterPayload): Promise<RegisterResponse> => {
+    const { data } = await client.post<APIResponse<RegisterResponse>>('/auth/register', payload);
     return data.data!;
   },
 
@@ -185,7 +212,16 @@ export const authAPI = {
   },
 
   resetPassword: async (token: string, password: string): Promise<void> => {
-    await client.post('/auth/reset-password', { token, password });
+    await client.post('/auth/reset-password', { token, new_password: password });
+  },
+
+  sendEmailOTP: async (email: string): Promise<void> => {
+    await client.post('/auth/otp/email/send', { email });
+  },
+
+  verifyEmailOTP: async (email: string, code: string): Promise<AuthResponse> => {
+    const { data } = await client.post<APIResponse<AuthResponse>>('/auth/otp/email/verify', { email, code });
+    return data.data!;
   },
 };
 
@@ -196,7 +232,7 @@ export interface CreateBookingPayload {
   return_date: string;
   size_selected: string;
   delivery_type: 'pickup' | 'delivery';
-  delivery_address?: string;
+  delivery_address_id?: string;
 }
 
 export interface BookingListResponse {
@@ -258,11 +294,6 @@ export const bookingsAPI = {
 
   cancel: async (id: string, reason?: string): Promise<void> => {
     await client.post(`/bookings/${id}/cancel`, { reason });
-  },
-
-  extend: async (id: string, extraDays: number): Promise<Booking> => {
-    const { data } = await client.patch<APIResponse<Booking>>(`/bookings/${id}/extend`, { extra_days: extraDays });
-    return data.data!;
   },
 };
 
@@ -358,6 +389,100 @@ export const userAPI = {
 
   setDefaultAddress: async (id: string): Promise<void> => {
     await client.put(`/users/addresses/${id}/default`);
+  },
+};
+
+// ─── BANK ACCOUNT ENDPOINTS ───────────────────────────
+export const bankAPI = {
+  list: async (): Promise<BankAccount[]> => {
+    const { data } = await client.get<APIResponse<BankAccount[]>>('/seller/bank-accounts');
+    return data.data || [];
+  },
+
+  create: async (payload: BankAccountPayload): Promise<BankAccount> => {
+    const { data } = await client.post<APIResponse<BankAccount>>('/seller/bank-accounts', payload);
+    return data.data!;
+  },
+
+  update: async (id: string, payload: Partial<BankAccountPayload>): Promise<void> => {
+    await client.put(`/seller/bank-accounts/${id}`, payload);
+  },
+
+  delete: async (id: string): Promise<void> => {
+    await client.delete(`/seller/bank-accounts/${id}`);
+  },
+
+  setDefault: async (id: string): Promise<void> => {
+    await client.put(`/seller/bank-accounts/${id}/default`);
+  },
+};
+
+// ─── UPI ENDPOINTS ─────────────────────────────────────
+export const upiAPI = {
+  list: async (): Promise<UPIID[]> => {
+    const { data } = await client.get<APIResponse<UPIID[]>>('/seller/upi');
+    return data.data || [];
+  },
+
+  create: async (payload: UPIIDPayload): Promise<UPIID> => {
+    const { data } = await client.post<APIResponse<UPIID>>('/seller/upi', payload);
+    return data.data!;
+  },
+
+  delete: async (id: string): Promise<void> => {
+    await client.delete(`/seller/upi/${id}`);
+  },
+
+  setDefault: async (id: string): Promise<void> => {
+    await client.put(`/seller/upi/${id}/default`);
+  },
+};
+
+// ─── INVENTORY ENDPOINTS ───────────────────────────────
+export const inventoryAPI = {
+  list: async (): Promise<InventoryItem[]> => {
+    const { data } = await client.get<APIResponse<InventoryItem[]>>('/seller/inventory');
+    return data.data || [];
+  },
+
+  update: async (outfitId: string, payload: InventoryUpdatePayload): Promise<void> => {
+    await client.put(`/seller/inventory/${outfitId}`, payload);
+  },
+};
+
+// ─── SELLER PAYOUT ENDPOINTS ───────────────────────────
+export const sellerPayoutAPI = {
+  withdraw: async (amount: number): Promise<void> => {
+    await client.post('/seller/payouts/withdraw', { amount });
+  },
+};
+
+// ─── SELLER SUPPORT TICKET ENDPOINTS ──────────────────
+export const sellerSupportAPI = {
+  getMyTickets: async (): Promise<SupportTicket[]> => {
+    const { data } = await client.get<APIResponse<SupportTicket[]>>('/support/tickets');
+    return data.data || [];
+  },
+
+  getTicketById: async (id: string): Promise<SupportTicket> => {
+    const { data } = await client.get<APIResponse<SupportTicket>>(`/support/tickets/${id}`);
+    return data.data!;
+  },
+
+  createTicket: async (payload: {
+    renterName: string;
+    renterEmail: string;
+    subject: string;
+    description: string;
+    priority: string;
+  }): Promise<SupportTicket> => {
+    const { data } = await client.post<APIResponse<SupportTicket>>('/support/tickets', payload);
+    return data.data!;
+  },
+
+  addReply: async (ticketId: string, payload: TicketReplyPayload): Promise<TicketReply> => {
+    const { data } = await client.post<APIResponse<TicketReply>>(`/support/tickets/${ticketId}/reply`, payload);
+    return data.data!;
   },
 };
 
@@ -664,6 +789,42 @@ export const reviewsAPI = {
   },
 };
 
+// ─── NOTIFICATION ENDPOINTS ──────────────────────────
+export interface NotificationListResponse {
+  notifications: Notification[];
+  meta: {
+    page: number;
+    per_page: number;
+    total: number;
+    unread: number;
+  };
+}
+
+export const notificationsAPI = {
+  list: async (page = 1, perPage = 20): Promise<NotificationListResponse> => {
+    const { data } = await client.get<{ data: Notification[]; meta: NotificationListResponse['meta'] }>(
+      `/notifications?page=${page}&per_page=${perPage}`
+    );
+    return {
+      notifications: data.data || [],
+      meta: data.meta || { page, per_page: perPage, total: 0, unread: 0 },
+    };
+  },
+
+  markRead: async (id: string): Promise<void> => {
+    await client.put(`/notifications/${id}/read`);
+  },
+
+  markAllRead: async (): Promise<void> => {
+    await client.put('/notifications/read-all');
+  },
+
+  getUnreadCount: async (): Promise<number> => {
+    const { data } = await client.get<{ data: Notification[]; meta: { unread: number } }>('/notifications?per_page=1');
+    return data.meta?.unread || 0;
+  },
+};
+
 // ─── SUPPORT TICKETS ENDPOINTS ────────────────────────
 export interface TicketPayload {
   renterName: string;
@@ -727,6 +888,98 @@ export const messagingAPI = {
 
   sendMessage: async (conversationId: string, text: string): Promise<void> => {
     await client.post(`/messages/conversations/${conversationId}`, { text });
+  },
+};
+
+// ─── RETURNS ENDPOINTS ─────────────────────────────────
+export interface ReturnRequest {
+  id: string;
+  booking_id: string;
+  booking_ref: string;
+  outfit_title: string;
+  outfit_image: string | null;
+  status: ReturnStatus;
+  reason: string;
+  pickup_scheduled_date: string | null;
+  pickup_completed_at: string | null;
+  inspection_status: InspectionStatus;
+  inspection_notes: string | null;
+  deposit_refund_status: RefundStatus;
+  deposit_refund_amount: number | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export type ReturnStatus =
+  | 'requested'
+  | 'pickup_scheduled'
+  | 'picked_up'
+  | 'in_inspection'
+  | 'inspection_complete'
+  | 'refund_pending'
+  | 'refund_processed'
+  | 'completed'
+  | 'rejected';
+
+export type InspectionStatus =
+  | 'pending'
+  | 'in_progress'
+  | 'passed'
+  | 'minor_damage'
+  | 'significant_damage';
+
+export type RefundStatus =
+  | 'not_applicable'
+  | 'pending'
+  | 'processing'
+  | 'completed'
+  | 'partially_refunded';
+
+export interface CreateReturnPayload {
+  booking_id: string;
+  reason: string;
+  description?: string;
+}
+
+export interface ReturnPolicy {
+  return_window_days: number;
+  cancellation_free_days: number;
+  cancellation_fee_percentage: number;
+  late_fee_per_day: number;
+  damage_assessment_policy: string;
+  refund_timeline_days: number;
+}
+
+export const returnsAPI = {
+  createReturn: async (payload: CreateReturnPayload): Promise<ReturnRequest> => {
+    const { data } = await client.post<APIResponse<ReturnRequest>>('/returns', payload);
+    return data.data!;
+  },
+
+  getMyReturns: async (): Promise<ReturnRequest[]> => {
+    const { data } = await client.get<APIResponse<ReturnRequest[]>>('/returns/mine');
+    return data.data || [];
+  },
+
+  getReturnById: async (id: string): Promise<ReturnRequest> => {
+    const { data } = await client.get<APIResponse<ReturnRequest>>(`/returns/${id}`);
+    return data.data!;
+  },
+
+  getReturnPolicy: async (): Promise<ReturnPolicy> => {
+    try {
+      const { data } = await client.get<APIResponse<ReturnPolicy>>('/returns/policy');
+      return data.data!;
+    } catch {
+      return {
+        return_window_days: 7,
+        cancellation_free_days: 7,
+        cancellation_fee_percentage: 50,
+        late_fee_per_day: 200,
+        damage_assessment_policy: 'Normal wear covered. Significant damage may result in partial deposit withholding.',
+        refund_timeline_days: 3,
+      };
+    }
   },
 };
 

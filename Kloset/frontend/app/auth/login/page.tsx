@@ -4,8 +4,10 @@ import React, { useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
-import { Mail, Lock, Eye, EyeOff, ArrowRight } from 'lucide-react';
+import { Mail, Lock, Eye, EyeOff, ArrowRight, Sparkles } from 'lucide-react';
 import { toast } from 'sonner';
+import { CredentialResponse } from '@react-oauth/google';
+import { isAxiosError } from 'axios';
 import { useAuthStore } from '@/store/useAuthStore';
 import { authAPI } from '@/lib/api';
 import Button from '@/components/ui/Button';
@@ -17,11 +19,12 @@ function AuthLoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const redirectTo = searchParams.get('redirect') || '/';
-  const { setAuth, isLoading, setLoading } = useAuthStore();
+  const { setAuth } = useAuthStore();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [role, setRole] = useState<'renter' | 'seller'>('renter');
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -29,33 +32,46 @@ function AuthLoginForm() {
       toast.error('Please enter both email and password.');
       return;
     }
-    setLoading(true);
+    setIsSubmitting(true);
     try {
       const resp = await authAPI.login({ email: email.trim(), password });
       setAuth(resp.user, resp.access_token, resp.refresh_token);
       toast.success('Welcome back to Kloset Luxe.');
       router.push(redirectTo);
-    } catch {
-      toast.error('Invalid credentials. Please try again.');
+    } catch (err: unknown) {
+      const msg = isAxiosError(err) ? err.response?.data?.error : '';
+      if (msg && msg.toLowerCase().includes('not verified')) {
+        toast.error('Email not verified. Redirecting to verification...');
+        router.push(`/auth/verify-email?email=${encodeURIComponent(email.trim())}`);
+      } else if (msg) {
+        toast.error(msg);
+      } else {
+        toast.error('Invalid credentials. Please try again.');
+      }
     } finally {
-      setLoading(false);
+      setIsSubmitting(false);
     }
   };
 
-  const handleGoogleSuccess = async (credentialResponse: { credential?: string }) => {
-    setLoading(true);
+  const handleGoogleSuccess = async (credentialResponse: CredentialResponse) => {
+    if (!credentialResponse.credential) {
+      toast.error('Google sign-in failed. No credential received.');
+      return;
+    }
+    setIsSubmitting(true);
     try {
       const resp = await authAPI.googleLogin({
-        credential: credentialResponse.credential || '',
+        credential: credentialResponse.credential,
         role,
       });
       setAuth(resp.user, resp.access_token, resp.refresh_token);
       toast.success(`Welcome to Kloset Luxe!`);
       router.push(redirectTo);
-    } catch {
-      toast.error('Google sign-in failed. Please try again.');
+    } catch (err: unknown) {
+      const msg = isAxiosError(err) ? err.response?.data?.error : 'Google sign-in failed. Please try again.';
+      toast.error(msg ?? 'Google sign-in failed. Please try again.');
     } finally {
-      setLoading(false);
+      setIsSubmitting(false);
     }
   };
 
@@ -115,8 +131,6 @@ function AuthLoginForm() {
               <GoogleButton
                 onSuccess={handleGoogleSuccess}
                 onError={() => toast.error('Google sign-in failed.')}
-                variant="outline"
-                className="w-full h-14 cursor-pointer"
               />
             </div>
 
@@ -202,7 +216,7 @@ function AuthLoginForm() {
               <Button
                 type="submit"
                 variant="primary"
-                isLoading={isLoading}
+                isLoading={isSubmitting}
                 className="w-full h-14 cursor-pointer"
               >
                 <ArrowRight size={16} className="mr-2" /> Sign In

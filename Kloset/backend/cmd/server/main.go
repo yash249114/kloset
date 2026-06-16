@@ -72,10 +72,12 @@ func main() {
 		&logging.SystemLog{},
 		&email.EmailLog{},
 		&auth.OTPVerification{},
+		&auth.EmailOTPVerification{},
 		&middleware.RateLimitEvent{},
 		&email.EmailQueue{},
 		&logging.AICache{},
 		&auth.User{},
+		&auth.PasswordResetToken{},
 		&user.UserAddress{},
 	)
 	if err != nil {
@@ -162,7 +164,7 @@ func main() {
 
 	// ─── Auth Module ───────────────────────────
 	authRepo := auth.NewRepository(db)
-	authService := auth.NewService(authRepo, cfg, notifService, logService)
+	authService := auth.NewService(authRepo, cfg, notifService, logService, emailService)
 	authHandler := auth.NewHandler(authService)
 
 	// ─── Outfit Module ─────────────────────────
