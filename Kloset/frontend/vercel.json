@@ -28,7 +28,7 @@
   ],
   "rewrites": [
     {
-      "source": "/monitoring",
+      "source": "/monitoring/:path*",
       "destination": "https://sentry.io/api/:path*/envelope/"
     }
   ],
