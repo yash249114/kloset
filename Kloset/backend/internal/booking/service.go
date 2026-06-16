@@ -1,6 +1,7 @@
 package booking
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	"math"
@@ -302,54 +303,143 @@ func (s *Service) UpdateStatus(idStr, userID, newStatus string) (*Booking, error
 			return nil, errors.New("unauthorized status transition")
 		}
 		// Complete payout / transactions — escrow release
-		// 1. Refund security deposit to renter
+		// 1. Refund security deposit to renter via Razorpay
 		depositRefund := booking.SecurityDeposit
 		if booking.DepositRefundAmount != nil {
 			depositRefund = *booking.DepositRefundAmount
 		}
-		if depositRefund > 0 {
-			note := fmt.Sprintf("Security deposit refund for completed booking Ref: %s", booking.BookingRef)
-			depositTx := map[string]interface{}{
-				"id":         uuid.New(),
-				"user_id":    booking.RenterID,
-				"booking_id": booking.ID,
-				"type":       "deposit_refund",
-				"amount":     depositRefund,
-				"status":     "completed",
-				"note":       &note,
+		if depositRefund > 0 && booking.RazorpayPaymentID != nil && *booking.RazorpayPaymentID != "" {
+			refundID, refundErr := s.rzpClient.RefundPayment(*booking.RazorpayPaymentID, depositRefund, fmt.Sprintf("Security deposit refund for completed booking Ref: %s", booking.BookingRef))
+			if refundErr != nil {
+				log.Error().Err(refundErr).Str("ref", booking.BookingRef).Msg("Failed to process deposit refund via Razorpay")
+				// Record failed attempt for manual retry
+				gateway := "razorpay"
+				note := fmt.Sprintf("Deposit refund FAILED for Ref: %s. Error: %v", booking.BookingRef, refundErr)
+				_ = s.repo.db.Table("transactions").Create(map[string]interface{}{
+					"id":         uuid.New(),
+					"user_id":    booking.RenterID,
+					"booking_id": booking.ID,
+					"type":       "deposit_refund",
+					"amount":     depositRefund,
+					"status":     "failed",
+					"gateway":    &gateway,
+					"note":       &note,
+				}).Error
+			} else {
+				note := fmt.Sprintf("Security deposit refund for completed booking Ref: %s", booking.BookingRef)
+				gateway := "razorpay"
+				_ = s.repo.db.Table("transactions").Create(map[string]interface{}{
+					"id":             uuid.New(),
+					"user_id":        booking.RenterID,
+					"booking_id":     booking.ID,
+					"type":           "deposit_refund",
+					"amount":         depositRefund,
+					"status":         "completed",
+					"gateway":        &gateway,
+					"gateway_txn_id": &refundID,
+					"note":           &note,
+				}).Error
 			}
-			_ = s.repo.db.Table("transactions").Create(&depositTx).Error
+		} else if depositRefund > 0 {
+			log.Warn().Str("ref", booking.BookingRef).Msg("Skipping deposit refund: RazorpayPaymentID missing")
 		}
 
-		// 2. Create seller payout (rental amount minus platform fee)
+		// 2. Execute seller payout via Razorpay (rental amount minus platform fee)
 		sellerPayout := booking.RentalAmount - booking.PlatformFee
 		if sellerPayout > 0 {
 			payoutNote := fmt.Sprintf("Seller payout for completed booking Ref: %s (Rental: %.2f - Platform Fee: %.2f)", booking.BookingRef, booking.RentalAmount, booking.PlatformFee)
-			payoutTx := map[string]interface{}{
-				"id":         uuid.New(),
-				"user_id":    booking.SellerID,
-				"booking_id": booking.ID,
-				"type":       "seller_payout",
-				"amount":     math.Round(sellerPayout*100) / 100,
-				"status":     "completed",
-				"note":       &payoutNote,
+			// Fetch seller details for Razorpay payout
+			var sellerDetails struct {
+				Email        string
+				Name         string
+				BankDetails  *string
+				PayoutAccount *string
 			}
-			_ = s.repo.db.Table("transactions").Create(&payoutTx).Error
-		}
+			_ = s.repo.db.Table("users").Select("email, name, bank_details, payout_account").Where("id = ?", booking.SellerID).Scan(&sellerDetails).Error
 
-		// Notify seller of payout
-		if s.notifSvc != nil {
-			_ = s.notifSvc.Create(
-				booking.SellerID.String(),
-				"seller_payout",
-				"Payout Released",
-				fmt.Sprintf("Your payout of ₹%.2f for booking %s has been released. Rental earnings minus platform fee.", sellerPayout, booking.BookingRef),
-				[]string{"in_app", "email"},
-				map[string]interface{}{
-					"ref":    booking.BookingRef,
-					"amount": sellerPayout,
-				},
-			)
+			gateway := "razorpay"
+			payoutStatus := "pending"
+
+			if sellerDetails.BankDetails != nil && *sellerDetails.BankDetails != "" {
+				// Parse bank details and execute payout
+				var bankInfo struct {
+					AccountName string `json:"account_name"`
+					IFSC        string `json:"ifsc"`
+					AccountNo   string `json:"account_number"`
+				}
+				if jsonErr := json.Unmarshal([]byte(*sellerDetails.BankDetails), &bankInfo); jsonErr == nil && bankInfo.AccountNo != "" && bankInfo.IFSC != "" {
+					contactID, contactErr := s.rzpClient.CreateContact(sellerDetails.Name, sellerDetails.Email, "seller")
+					if contactErr != nil {
+						log.Error().Err(contactErr).Str("ref", booking.BookingRef).Msg("Failed to create Razorpay contact for seller payout")
+					} else {
+						fundAccountID, faErr := s.rzpClient.CreateFundAccount(contactID, "bank_account", bankInfo.AccountName, &struct {
+							Name    string
+							IFSC    string
+							Account string
+						}{Name: bankInfo.AccountName, IFSC: bankInfo.IFSC, Account: bankInfo.AccountNo}, nil)
+						if faErr != nil {
+							log.Error().Err(faErr).Str("ref", booking.BookingRef).Msg("Failed to create Razorpay fund account for seller payout")
+						} else {
+							refID := fmt.Sprintf("KL-PO-%s", booking.BookingRef)
+							payoutID, payoutErr := s.rzpClient.CreatePayout(fundAccountID, sellerPayout, "INR", "bank_transfer", "payout", refID)
+							if payoutErr != nil {
+								log.Error().Err(payoutErr).Str("ref", booking.BookingRef).Msg("Failed to execute Razorpay payout to seller")
+							} else {
+								payoutStatus = "completed"
+								gwTxnID := payoutID
+								_ = s.repo.db.Table("transactions").Create(map[string]interface{}{
+									"id":             uuid.New(),
+									"user_id":        booking.SellerID,
+									"booking_id":     booking.ID,
+									"type":           "seller_payout",
+									"amount":         math.Round(sellerPayout*100) / 100,
+									"status":         "completed",
+									"gateway":        &gateway,
+									"gateway_txn_id": &gwTxnID,
+									"note":           &payoutNote,
+								}).Error
+							}
+						}
+					}
+				} else {
+					log.Warn().Str("ref", booking.BookingRef).Msg("Seller bank details missing or invalid — payout queued for manual processing")
+				}
+			} else {
+				log.Warn().Str("ref", booking.BookingRef).Msg("Seller has no bank details on file — payout queued for manual processing")
+			}
+
+			// Always create transaction record (pending or completed)
+			if payoutStatus != "completed" {
+				_ = s.repo.db.Table("transactions").Create(map[string]interface{}{
+					"id":     uuid.New(),
+					"user_id": booking.SellerID,
+					"booking_id": booking.ID,
+					"type":   "seller_payout",
+					"amount": math.Round(sellerPayout*100) / 100,
+					"status": payoutStatus,
+					"gateway": &gateway,
+					"note":   &payoutNote,
+				}).Error
+			}
+
+			// Notify seller of payout
+			if s.notifSvc != nil {
+				payoutMsg := fmt.Sprintf("Your payout of ₹%.2f for booking %s has been released.", sellerPayout, booking.BookingRef)
+				if payoutStatus != "completed" {
+					payoutMsg = fmt.Sprintf("Your payout of ₹%.2f for booking %s is being processed. You will receive it shortly.", sellerPayout, booking.BookingRef)
+				}
+				_ = s.notifSvc.Create(
+					booking.SellerID.String(),
+					"seller_payout",
+					"Payout Released",
+					payoutMsg,
+					[]string{"in_app", "email"},
+					map[string]interface{}{
+						"ref":    booking.BookingRef,
+						"amount": sellerPayout,
+					},
+				)
+			}
 		}
 
 		log.Info().Str("ref", booking.BookingRef).Float64("seller_payout", sellerPayout).Float64("deposit_refund", depositRefund).Msg("Booking completed: escrow released")

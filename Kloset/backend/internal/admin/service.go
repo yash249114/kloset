@@ -1,6 +1,7 @@
 package admin
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	"math"
@@ -259,6 +260,99 @@ func (s *Service) ResolveDispute(disputeID string, resolution string, note strin
 		}
 		if err := s.db.Table("transactions").Create(&refundTx).Error; err != nil {
 			log.Error().Err(err).Msg("Failed to save dispute refund transaction to database")
+		}
+	}
+
+	// Execute seller payout for full_release_seller or split resolutions
+	if resolution == "full_release_seller" || resolution == "split" {
+		var bDetails struct {
+			SecurityDeposit float64
+			RentalAmount    float64
+			PlatformFee     float64
+			BookingRef      string
+		}
+		if err := s.db.Table("bookings").Select("security_deposit, rental_amount, platform_fee, booking_ref").Where("id = ?", d.BookingID).First(&bDetails).Error; err == nil {
+			var sellerPayoutAmt float64
+			if resolution == "full_release_seller" {
+				sellerPayoutAmt = bDetails.SecurityDeposit
+			} else {
+				// split: renter gets refundAmt, seller gets remainder of deposit
+				sellerPayoutAmt = bDetails.SecurityDeposit - refundAmt
+			}
+
+			if sellerPayoutAmt > 0 {
+				// Fetch seller details for payout
+				var sellerDetails struct {
+					Email         string
+					Name          string
+					BankDetails   *string
+					PayoutAccount *string
+				}
+				_ = s.db.Table("users").Select("email, name, bank_details, payout_account").Where("id = ?", d.Against).Scan(&sellerDetails).Error
+
+				gateway := "razorpay"
+				payoutStatus := "pending"
+
+				if sellerDetails.BankDetails != nil && *sellerDetails.BankDetails != "" {
+					var bankInfo struct {
+						AccountName string `json:"account_name"`
+						IFSC        string `json:"ifsc"`
+						AccountNo   string `json:"account_number"`
+					}
+					if jsonErr := json.Unmarshal([]byte(*sellerDetails.BankDetails), &bankInfo); jsonErr == nil && bankInfo.AccountNo != "" && bankInfo.IFSC != "" {
+						contactID, contactErr := s.rzpClient.CreateContact(sellerDetails.Name, sellerDetails.Email, "seller")
+						if contactErr != nil {
+							log.Error().Err(contactErr).Msg("Failed to create Razorpay contact for dispute seller payout")
+						} else {
+							fundAccountID, faErr := s.rzpClient.CreateFundAccount(contactID, "bank_account", bankInfo.AccountName, &struct {
+								Name    string
+								IFSC    string
+								Account string
+							}{Name: bankInfo.AccountName, IFSC: bankInfo.IFSC, Account: bankInfo.AccountNo}, nil)
+							if faErr != nil {
+								log.Error().Err(faErr).Msg("Failed to create Razorpay fund account for dispute seller payout")
+							} else {
+								refID := fmt.Sprintf("KL-DISP-%s", b.BookingRef)
+								payoutID, payoutErr := s.rzpClient.CreatePayout(fundAccountID, sellerPayoutAmt, "INR", "bank_transfer", "payout", refID)
+								if payoutErr != nil {
+									log.Error().Err(payoutErr).Msg("Failed to execute Razorpay payout to seller on dispute")
+								} else {
+									payoutStatus = "completed"
+									gwTxnID := payoutID
+									_ = s.db.Table("transactions").Create(map[string]interface{}{
+										"id":             uuid.New(),
+										"user_id":        d.Against,
+										"booking_id":     d.BookingID,
+										"type":           "seller_payout",
+										"amount":         math.Round(sellerPayoutAmt*100) / 100,
+										"status":         "completed",
+										"gateway":        &gateway,
+										"gateway_txn_id": &gwTxnID,
+										"note":           fmt.Sprintf("Dispute resolution seller payout: %s", resolution),
+									}).Error
+								}
+							}
+						}
+					} else {
+						log.Warn().Msg("Seller bank details missing or invalid for dispute payout")
+					}
+				} else {
+					log.Warn().Msg("Seller has no bank details on file for dispute payout")
+				}
+
+				if payoutStatus != "completed" {
+					_ = s.db.Table("transactions").Create(map[string]interface{}{
+						"id":         uuid.New(),
+						"user_id":    d.Against,
+						"booking_id": d.BookingID,
+						"type":       "seller_payout",
+						"amount":     math.Round(sellerPayoutAmt*100) / 100,
+						"status":     payoutStatus,
+						"gateway":    &gateway,
+						"note":       fmt.Sprintf("Dispute resolution seller payout (pending): %s", resolution),
+					}).Error
+				}
+			}
 		}
 	}
 
