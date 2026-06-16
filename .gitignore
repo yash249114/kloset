@@ -1,42 +1,85 @@
-# Dependencies
+# ─── Node ───────────────────────────────────────────
 node_modules/
+.next/
+out/
+dist/
+build/
+.turbo/
 
-# Environment files (NEVER commit secrets)
+# ─── Logs ───────────────────────────────────────────
+*.log
+logs/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# ─── Environment (NEVER commit secrets) ────────────
 .env
 .env.local
 .env.production
+.env.development
+.env.test
 !.env.example
 
-# Build output
-dist/
-build/
-.next/
-
-# Binaries
-*.exe
-*.dll
-*.so
-*.dylib
-
-# IDE
+# ─── IDE / Editor ──────────────────────────────────
 .vscode/
 .idea/
 *.swp
 *.swo
+*~
+.cursor/
 
-# OS
+# ─── OS ────────────────────────────────────────────
 .DS_Store
 Thumbs.db
+ehthumbs.db
+Desktop.ini
 
-# Logs
-*.log
-npm-debug.log*
+# ─── Testing ───────────────────────────────────────
+coverage/
+test-results/
+*.test
 
-# AI tooling
+# ─── Go binaries ───────────────────────────────────
+bin/
+*.exe
+*.dll
+*.so
+*.dylib
+*.out
+
+# ─── Python ────────────────────────────────────────
+__pycache__/
+*.pyc
+*.pyo
+venv/
+.venv/
+
+# ─── Generated / Artefacts ─────────────────────────
+*.tmp
+*.cache
+*.tsbuildinfo
+next-env.d.ts
+*-output.txt
+build-output.txt
+lint-output.txt
+vercel-output.txt
+
+# ─── Reports / Audits ──────────────────────────────
+*_REPORT.md
+*_REPORT.json
+SENTRY_*
+reports/
+
+# ─── AI tooling ────────────────────────────────────
 .aider*
+.antigravitycli/
+.commandcode/
 
-# Archived artifacts
+# ─── Archived ──────────────────────────────────────
 _archive/
+artifacts/
 
-# Cursor / IDE
-.cursor/
+# ─── Sentry ────────────────────────────────────────
+.env.sentry-build-plugin
