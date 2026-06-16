@@ -20,8 +20,8 @@
   --color-admin-sidebar: #161616;
   --color-admin-border: #2A2A2A;
 
-  --font-display: "Playfair Display", Georgia, serif;
-  --font-sans: Inter, system-ui, sans-serif;
+  --font-display: "Playfair Display";
+  --font-sans: "Inter";
 }
 
 :root {
@@ -162,10 +162,159 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 @keyframes loadingShimmer {
-  0% {
-    background-position: 200% 0;
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+/* ─── PREMIUM UTILITIES ─── */
+
+.double-bezel {
+  padding: 0.375rem;
+  border-radius: 1.5rem;
+  background: color-mix(in srgb, var(--charcoal) 4%, transparent);
+  outline: 1px solid color-mix(in srgb, var(--charcoal) 6%, transparent);
+}
+
+.double-bezel-inner {
+  border-radius: calc(1.5rem - 0.25rem);
+  background: var(--warm-white);
+  overflow: hidden;
+}
+
+.section-pad {
+  padding-top: clamp(4rem, 10vw, 8rem);
+  padding-bottom: clamp(4rem, 10vw, 8rem);
+}
+
+.grain-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  pointer-events: none;
+  opacity: 0.02;
+  mix-blend-mode: multiply;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+  background-repeat: repeat;
+  background-size: 256px 256px;
+}
+
+@media (prefers-color-scheme: dark) {
+  .grain-overlay {
+    opacity: 0.03;
+    mix-blend-mode: screen;
   }
-  100% {
-    background-position: -200% 0;
+}
+
+/* ─── PREMIUM SCROLLBAR ─── */
+
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--champagne);
+}
+
+/* ─── BENTO CELL VARIANT ─── */
+
+.bento-cell {
+  position: relative;
+  overflow: hidden;
+  border-radius: 1.5rem;
+}
+
+.bento-cell img {
+  transition: transform 0.8s cubic-bezier(0.32, 0.72, 0, 1);
+}
+
+.bento-cell:hover img {
+  transform: scale(1.05);
+}
+
+/* ─── BUTTON-IN-BUTTON ICON PATTERN ─── */
+
+.btn-icon-wrap {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  border-radius: 9999px;
+  background: color-mix(in srgb, var(--charcoal) 6%, transparent);
+  flex-shrink: 0;
+}
+
+/* ─── GLOBAL POLISH UTILITIES ─── */
+
+/* Consistent hover states */
+.hover-lift {
+  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.hover-lift:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.08);
+}
+
+.btn-secondary {
+  background-color: transparent;
+  color: var(--charcoal);
+  border: 1.5px solid var(--border);
+}
+.btn-secondary:hover {
+  background-color: var(--ivory-dark);
+  border-color: var(--charcoal);
+  transform: translateY(-1px);
+}
+
+/* Page transition wrapper */
+.page-transition {
+  opacity: 0;
+  transform: translateY(12px);
+  animation: pageIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes pageIn {
+  to {
+    opacity: 1;
+    transform: translateY(0);
   }
+}
+
+/* Scrollbar hide utility */
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
+/* Focus ring utility */
+.focus-ring:focus {
+  outline: none;
+  box-shadow: 0 0 0 2px var(--ivory), 0 0 0 4px var(--champagne);
+}
+
+/* Consistent spacing system */
+.space-luxury > * + * {
+  margin-top: 1.5rem;
+}
+
+/* Smooth image loading */
+.img-lazy {
+  opacity: 0;
+  transition: opacity 0.4s ease;
+}
+.img-lazy.loaded {
+  opacity: 1;
 }
