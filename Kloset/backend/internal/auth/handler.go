@@ -207,7 +207,7 @@ func (h *Handler) VerifyEmailOTP(c *fiber.Ctx) error {
 		return response.BadRequest(c, "Validation failed: "+err.Error())
 	}
 
-	result, err := h.service.VerifyEmailOTP(req.Email, req.Code)
+	result, err := h.service.VerifyEmailOTP(req.Email, req.Code, c.IP())
 	if err != nil {
 		return response.BadRequest(c, err.Error())
 	}

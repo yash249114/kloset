@@ -579,7 +579,7 @@ func (s *Service) VerifyEmailOTP(emailAddr string, code string, ip string) (*Aut
 
 	// Log successful verification
 	if s.logSvc != nil {
-		s.logSvc.LogEvent(user.Email, "Email verified successfully via OTP", "127.0.0.1", "info")
+		s.logSvc.LogEvent(user.Email, "Email verified successfully via OTP", ip, "info")
 	}
 
 	// Generate auth tokens (auto-login)
