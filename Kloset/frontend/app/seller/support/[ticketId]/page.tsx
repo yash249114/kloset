@@ -47,7 +47,7 @@ const handleReply = async (e: React.FormEvent) => {
     if (!replyText.trim()) return;
     setSending(true);
     try {
-      await supportAPI.addAgentReply(ticketId, { message: replyText.trim() });
+      await supportAPI.addReply(ticketId, { message: replyText.trim() });
       toast.success('Reply sent.');
       setReplyText('');
       loadTicket();

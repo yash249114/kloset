@@ -1,6 +1,7 @@
 package monitoring
 
 import (
+	"fmt"
 	"time"
 
 	"github.com/gofiber/fiber/v2"
@@ -141,7 +142,7 @@ func (h *Handler) GetAlerts(c *fiber.Ctx) error {
 		Count int64
 	}
 	var latencyAgents []LatencyAgent
-	h.db.Table("system_logs").Select("actor as agent, count(*) as count").
+	_ = h.db.Table("system_logs").Select("actor as agent, count(*) as count").
 		Where("timestamp >= ? AND severity IN ('warn', 'error')", time.Now().Add(-6*time.Hour)).
 		Group("actor").
 		Having("count(*) > 5").
@@ -192,7 +193,7 @@ func (h *Handler) GetIncidents(c *fiber.Ctx) error {
 	}
 
 	var incidentLogs []map[string]interface{}
-	h.db.Table("system_logs").Select("DISTINCT actor as agent, MAX(timestamp) as last_time, COUNT(*) as occurrences").
+	_ = h.db.Table("system_logs").Select("DISTINCT actor as agent, MAX(timestamp) as last_time, COUNT(*) as occurrences").
 		Where("timestamp >= ? AND severity IN ('error', 'warn')", time.Now().Add(-24*time.Hour)).
 		Group("actor").
 		Having("COUNT(*) > 3").
@@ -262,15 +263,20 @@ func (h *Handler) GetSystemHealth(c *fiber.Ctx) error {
 
 	var avgResponseTime float64
 	if totalRequests > 0 {
-		var sumTime float64
-		var count int64
-		h.db.Table("system_logs").Select("EXTRACT(EPOCH FROM (timestamp - LAG(timestamp, 1, timestamp))) as time_diff").
+		var timeDiffs []float64
+		_ = h.db.Table("system_logs").Select("EXTRACT(EPOCH FROM (timestamp - LAG(timestamp, 1, timestamp))) as time_diff").
 			Where("timestamp >= ?", time.Now().Add(-1*time.Hour)).
-			Scan(&sumTime, &count).Error
-		if count > 0 {
-				avgResponseTime = sumTime / float64(count)
-			}
+			Scan(&timeDiffs).Error
+
+		count := len(timeDiffs)
+		var sumTime float64
+		for _, td := range timeDiffs {
+			sumTime += td
 		}
+		if count > 0 {
+			avgResponseTime = sumTime / float64(count)
+		}
+	}
 
 	// Calculate health score
 	healthScore := 100.0
@@ -297,15 +303,15 @@ func (h *Handler) GetSystemHealth(c *fiber.Ctx) error {
 // GetRevenueMonitoring returns revenue analytics
 func (h *Handler) GetRevenueMonitoring(c *fiber.Ctx) error {
 	var gbv float64
-	h.db.Table("transactions").Where("status = 'completed' AND type IN ('rental_payment', 'deposit_payment')").
+	_ = h.db.Table("transactions").Where("status = 'completed' AND type IN ('rental_payment', 'deposit_payment')").
 		Select("COALESCE(SUM(amount), 0)").Scan(&gbv).Error
 
 	var commission float64
-	h.db.Table("bookings").Where("payment_status = 'completed'").
+	_ = h.db.Table("bookings").Where("payment_status = 'completed'").
 		Select("COALESCE(SUM(platform_fee), 0)").Scan(&commission).Error
 
 	var monthlyGrowth float64
-	h.db.Table("transactions").Where("type = 'rental_payment' AND status = 'completed'").
+	_ = h.db.Table("transactions").Where("type = 'rental_payment' AND status = 'completed'").
 		Select("COALESCE(SUM(amount), 0)").
 		Where("created_at >= ?", time.Now().AddDate(0, -1, 0)).
 		Scan(&monthlyGrowth).Error
@@ -313,7 +319,7 @@ func (h *Handler) GetRevenueMonitoring(c *fiber.Ctx) error {
 	var monthlyGrowthPercent float64
 	if monthlyGrowth > 0 {
 		var priorMonth float64
-		h.db.Table("transactions").Where("type = 'rental_payment' AND status = 'completed'").
+		_ = h.db.Table("transactions").Where("type = 'rental_payment' AND status = 'completed'").
 			Select("COALESCE(SUM(amount), 0)").
 			Where("created_at >= ? AND created_at < ?", time.Now().AddDate(0, -2, 0), time.Now().AddDate(0, -1, 0)).
 			Scan(&priorMonth).Error
