@@ -32,18 +32,9 @@ export const useUIStore = create<UIState>((set, get) => ({
   activeModal: null,
   overlayCount: 0,
 
-  setCartOpen: (open) => {
-    const { registerOverlay, unregisterOverlay } = get();
-    if (open) registerOverlay();
-    else unregisterOverlay();
-    set({ cartOpen: open });
-  },
-  setAIStylistOpen: (open) => {
-    const { registerOverlay, unregisterOverlay } = get();
-    if (open) registerOverlay();
-    else unregisterOverlay();
-    set({ aiStylistOpen: open });
-  },
+  // Drawer component handles overlay registration
+  setCartOpen: (open) => set({ cartOpen: open }),
+  setAIStylistOpen: (open) => set({ aiStylistOpen: open }),
   setActiveModal: (modalId) => {
     const { registerOverlay, unregisterOverlay, activeModal } = get();
     if (modalId && !activeModal) registerOverlay();

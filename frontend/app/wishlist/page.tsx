@@ -12,6 +12,7 @@ import { useAuthStore } from '@/store/useAuthStore';
 import Button from '@/components/ui/Button';
 import Card from '@/components/ui/Card';
 import Badge from '@/components/ui/Badge';
+import { WishlistSkeleton } from '@/components/ui/Skeleton';
 
 export default function WishlistPage() {
   const router = useRouter();
@@ -58,12 +59,7 @@ export default function WishlistPage() {
   };
 
   if (authLoading || isLoading) {
-    return (
-      <div className="bg-ivory min-h-screen pt-36 text-center select-none font-mono text-xs text-charcoal-light">
-        <div className="animate-spin inline-block w-6 h-6 border-2 border-champagne rounded-full border-t-transparent mb-2" />
-        <p>Syncing Wishlist Registry...</p>
-      </div>
-    );
+    return <WishlistSkeleton />;
   }
 
   return (

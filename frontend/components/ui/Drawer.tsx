@@ -34,14 +34,13 @@ export default function Drawer({
     return () => clearTimeout(timer);
   }, []);
 
+  // Single source of truth: Drawer manages overlay registration
   useEffect(() => {
     if (isOpen) {
       registerOverlay();
-    } else {
-      unregisterOverlay();
     }
     return () => {
-      if (isOpen) unregisterOverlay();
+      unregisterOverlay();
     };
   }, [isOpen, registerOverlay, unregisterOverlay]);
 

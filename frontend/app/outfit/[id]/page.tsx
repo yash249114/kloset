@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
-import { Star, Calendar, MapPin, ShieldCheck, ChevronLeft, Heart, ShoppingBag, Sparkles, Check, MessageSquare } from 'lucide-react';
+import { Star, Calendar, MapPin, ShieldCheck, ChevronLeft, Heart, ShoppingBag, Sparkles, Check, MessageSquare, Truck, Shield, RotateCcw, Clock, User, Award } from 'lucide-react';
 import { toast } from 'sonner';
 import { outfitsAPI, reviewsAPI } from '@/lib/api';
 import { useAuthStore } from '@/store/useAuthStore';
@@ -14,6 +14,7 @@ import type { Outfit, ReviewResponse } from '@/types';
 import Button from '@/components/ui/Button';
 import Badge from '@/components/ui/Badge';
 import Card from '@/components/ui/Card';
+import { OutfitDetailSkeleton } from '@/components/ui/Skeleton';
 
 const springTransition = { type: 'spring' as const, stiffness: 300, damping: 30 };
 
@@ -34,6 +35,8 @@ export default function OutfitDetailPage() {
   const [reviews, setReviews] = useState<ReviewResponse[]>([]);
   const [reviewsLoading, setReviewsLoading] = useState(false);
   const [recommendations, setRecommendations] = useState<Outfit[]>([]);
+  const [isImageZoomed, setIsImageZoomed] = useState(false);
+  const [zoomPosition, setZoomPosition] = useState({ x: 0, y: 0 });
 
   useEffect(() => {
     const fetchOutfit = async () => {
@@ -126,12 +129,7 @@ export default function OutfitDetailPage() {
   const currentPrice = priceMap[rentalDays] || null;
 
   if (loading) {
-    return (
-      <div className="bg-ivory min-h-screen pt-36 text-center font-mono text-xs text-charcoal-light">
-        <div className="animate-spin inline-block w-6 h-6 border-2 border-champagne rounded-full border-t-transparent mb-2" />
-        <p>Loading Couture Detail...</p>
-      </div>
-    );
+    return <OutfitDetailSkeleton />;
   }
 
   if (!outfit) {
@@ -160,26 +158,49 @@ export default function OutfitDetailPage() {
             className="lg:col-span-7 space-y-4"
           >
             <div className="aspect-[4/5] rounded-xl overflow-hidden bg-ivory-dark border border-border relative group">
-              <motion.img
-                key={selectedImageIndex}
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                src={images[selectedImageIndex]?.url}
-                alt={outfit.title}
-                className="w-full h-full object-cover"
-              />
+              {/* Main Image with Zoom */}
+              <div className="relative w-full h-full" onMouseMove={(e) => {
+                const rect = e.currentTarget.getBoundingClientRect();
+                setZoomPosition({
+                  x: ((e.clientX - rect.left) / rect.width) * 100,
+                  y: ((e.clientY - rect.top) / rect.height) * 100
+                });
+              }} onMouseEnter={() => setIsImageZoomed(true)} onMouseLeave={() => setIsImageZoomed(false)}>
+                <motion.img
+                  key={selectedImageIndex}
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  src={images[selectedImageIndex]?.url}
+                  alt={outfit.title}
+                  className={`w-full h-full object-cover transition-transform duration-200 ${isImageZoomed ? 'scale-150' : ''}`}
+                  style={isImageZoomed ? { transformOrigin: `${zoomPosition.x}% ${zoomPosition.y}%` } : {}}
+                />
+                {/* Zoom Lens Indicator */}
+                {isImageZoomed && (
+                  <div className="absolute inset-0 bg-gradient-to-t from-charcoal/20 via-transparent to-transparent pointer-events-none" />
+                )}
+              </div>
+
+              {/* Wishlist Button */}
               <button onClick={toggleWishlist}
-                className="absolute top-4 right-4 p-3 bg-white/80 backdrop-blur-sm border border-border/40 rounded-full hover:bg-white transition-colors cursor-pointer"
+                className="absolute top-4 right-4 p-3 bg-white/80 backdrop-blur-sm border border-border/40 rounded-full hover:bg-white transition-colors cursor-pointer z-10"
               >
                 <Heart size={18} className={isInWishlist ? 'fill-rose-gold text-rose-gold' : 'text-charcoal-light'} />
               </button>
+
+              {/* Zoom Hint */}
+              <div className="absolute bottom-4 left-4 right-4 text-center text-[10px] font-mono text-warm-white/80 opacity-0 group-hover:opacity-100 transition-opacity">
+                Hover to zoom in
+              </div>
             </div>
+
+            {/* Thumbnails */}
             {images.length > 1 && (
               <div className="flex gap-3 overflow-x-auto pb-2">
                 {images.map((img, idx) => (
                   <button key={img.id} onClick={() => setSelectedImageIndex(idx)}
-                    className={`w-20 h-20 rounded-lg overflow-hidden border-2 flex-shrink-0 cursor-pointer transition-colors ${
-                      idx === selectedImageIndex ? 'border-champagne' : 'border-border hover:border-champagne/50'
+                    className={`w-20 h-20 rounded-lg overflow-hidden border-2 flex-shrink-0 cursor-pointer transition-all duration-300 ${
+                      idx === selectedImageIndex ? 'border-champagne scale-105' : 'border-border hover:border-champagne/50'
                     }`}
                   >
                     <img src={img.url} alt="" className="w-full h-full object-cover" />
@@ -187,6 +208,26 @@ export default function OutfitDetailPage() {
                 ))}
               </div>
             )}
+
+            {/* Trust Badges Row */}
+            <div className="flex flex-wrap gap-3 pt-2">
+              <div className="flex items-center gap-2 px-3 py-2 bg-white/80 backdrop-blur-sm border border-border/40 rounded-full">
+                <ShieldCheck size={14} className="text-success" />
+                <span className="text-[10px] font-mono text-charcoal">100% Authentic</span>
+              </div>
+              <div className="flex items-center gap-2 px-3 py-2 bg-white/80 backdrop-blur-sm border border-border/40 rounded-full">
+                <RotateCcw size={14} className="text-champagne" />
+                <span className="text-[10px] font-mono text-charcoal">Free Dry-Clean</span>
+              </div>
+              <div className="flex items-center gap-2 px-3 py-2 bg-white/80 backdrop-blur-sm border border-border/40 rounded-full">
+                <Truck size={14} className="text-champagne" />
+                <span className="text-[10px] font-mono text-charcoal">Doorstep Delivery</span>
+              </div>
+              <div className="flex items-center gap-2 px-3 py-2 bg-white/80 backdrop-blur-sm border border-border/40 rounded-full">
+                <Shield size={14} className="text-champagne" />
+                <span className="text-[10px] font-mono text-charcoal">Escrow Protected</span>
+              </div>
+            </div>
           </motion.div>
 
           <motion.div
@@ -271,13 +312,56 @@ export default function OutfitDetailPage() {
               </div>
             </div>
 
-            <div className="flex flex-col gap-3">
-              <Button variant="primary" onClick={handleBookNow} className="w-full h-[52px] cursor-pointer">
-                <Calendar size={16} className="mr-2" /> Book Now
-              </Button>
-              <Button variant="outline" onClick={handleAddToCart} className="w-full h-[52px] cursor-pointer">
-                <ShoppingBag size={16} className="mr-2" /> Add to Cart
-              </Button>
+            {/* Sticky Booking Card */}
+            <div className="sticky top-24 lg:top-28">
+              <div className="p-6 bg-white border border-border rounded-xl space-y-4 shadow-sm">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <span className="text-[10px] font-mono text-champagne uppercase font-bold block">Total for {rentalDays} {rentalDays === 1 ? 'Day' : 'Days'}</span>
+                    <span className="text-2xl font-display font-semibold text-charcoal">₹{currentPrice?.toLocaleString('en-IN') || '—'}</span>
+                  </div>
+                </div>
+
+                <div className="border-t border-border pt-4 space-y-3 text-xs text-charcoal-light">
+                  <div className="flex items-center justify-between">
+                    <span className="flex items-center gap-2"><Calendar size={12} className="text-champagne" /> Rental</span>
+                    <span className="font-mono font-bold text-charcoal">₹{currentPrice?.toLocaleString('en-IN') || '—'}</span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="flex items-center gap-2"><Shield size={12} className="text-champagne" /> Security Deposit</span>
+                    <span className="font-mono font-bold text-charcoal">₹{outfit.security_deposit?.toLocaleString('en-IN') || '—'}</span>
+                  </div>
+                  <div className="flex items-center justify-between text-champagne font-bold">
+                    <span className="flex items-center gap-2"><Award size={12} /> Platform Fee (5%)</span>
+                    <span className="font-mono text-charcoal">₹{currentPrice ? Math.round(currentPrice * 0.05).toLocaleString('en-IN') : '—'}</span>
+                  </div>
+                  <div className="border-t border-border pt-3 flex items-center justify-between text-sm font-semibold text-charcoal">
+                    <span className="flex items-center gap-2"><Truck size={14} className="text-champagne" /> Total Payable</span>
+                    <span className="font-display">₹{currentPrice ? (currentPrice + (outfit.security_deposit || 0) + Math.round(currentPrice * 0.05)).toLocaleString('en-IN') : '—'}</span>
+                  </div>
+                </div>
+
+                <div className="flex flex-col gap-3 pt-2">
+                  <Button variant="primary" onClick={handleBookNow} className="w-full h-[52px] cursor-pointer">
+                    <Calendar size={16} className="mr-2" /> Book Now
+                  </Button>
+                  <Button variant="outline" onClick={handleAddToCart} className="w-full h-[52px] cursor-pointer">
+                    <ShoppingBag size={16} className="mr-2" /> Add to Cart
+                  </Button>
+                </div>
+
+                <div className="border-t border-border pt-4 space-y-2 text-[10px] font-mono text-charcoal-light">
+                  <div className="flex items-center gap-2 text-success">
+                    <ShieldCheck size={12} /> Deposit refunded within 72hrs post return
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <RotateCcw size={12} className="text-champagne" /> Free dry-cleaning included
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Truck size={12} className="text-champagne" /> Doorstep delivery & pickup
+                  </div>
+                </div>
+              </div>
             </div>
 
             <div className="border-t border-border pt-6 space-y-3 text-xs text-charcoal-light">

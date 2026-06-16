@@ -1,8 +1,6 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
-import { useAuthStore } from '@/store/useAuthStore';
 import { outfitsAPI } from '@/lib/api';
 import type { Outfit } from '@/types';
 
@@ -13,6 +11,7 @@ import Trending from '@/components/home/Trending';
 import Reviews from '@/components/home/Reviews';
 import Trust from '@/components/home/Trust';
 import SellerCTA from '@/components/home/SellerCTA';
+import { TrendingSkeleton } from '@/components/home/loading';
 
 const MOCK_TRENDING: Partial<Outfit>[] = [
   {
@@ -64,17 +63,23 @@ const MOCK_REVIEWS = [
 ];
 
 export default function Homepage() {
-  const { isAuthenticated } = useAuthStore();
-
-  const [trending, setTrending] = useState<Partial<Outfit>[]>(MOCK_TRENDING);
+  const [trending, setTrending] = useState<Partial<Outfit>[] | null>(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     async function loadData() {
       try {
         const trendResp = await outfitsAPI.getTrending(4);
-        if (trendResp && trendResp.length > 0) setTrending(trendResp);
+        if (trendResp && trendResp.length > 0) {
+          setTrending(trendResp);
+        } else {
+          setTrending(MOCK_TRENDING);
+        }
       } catch (err) {
         console.warn('Could not load trending outfits, using fallbacks.', err);
+        setTrending(MOCK_TRENDING);
+      } finally {
+        setLoading(false);
       }
     }
     loadData();
@@ -90,7 +95,7 @@ export default function Homepage() {
 
       <HowItWorks />
 
-      <Trending outfits={trending} />
+      {loading ? <TrendingSkeleton /> : <Trending outfits={trending || []} />}
 
       <Reviews reviews={MOCK_REVIEWS} />
 

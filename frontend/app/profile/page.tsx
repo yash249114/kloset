@@ -21,6 +21,7 @@ import type { User, Address, AddAddressPayload } from '@/types';
 import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
 import Card from '@/components/ui/Card';
+import { ProfileSkeleton } from '@/components/ui/Skeleton';
 
 type ProfileTab = 'personal' | 'addresses' | 'business' | 'wallet';
 
@@ -196,12 +197,7 @@ export default function ProfilePage() {
   };
 
   if (authLoading || profileLoading) {
-    return (
-      <div className="bg-ivory min-h-screen pt-36 text-center select-none font-mono text-xs text-charcoal-light">
-        <div className="animate-spin inline-block w-6 h-6 border-2 border-champagne rounded-full border-t-transparent mb-2" />
-        <p>Loading Escrow Member Registry...</p>
-      </div>
-    );
+    return <ProfileSkeleton />;
   }
 
   return (

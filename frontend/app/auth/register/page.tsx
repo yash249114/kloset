@@ -6,6 +6,8 @@ import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { User, Mail, Lock, Phone, Eye, EyeOff, ArrowRight, Sparkles } from 'lucide-react';
 import { toast } from 'sonner';
+import { CredentialResponse } from '@react-oauth/google';
+import { isAxiosError } from 'axios';
 import { useAuthStore } from '@/store/useAuthStore';
 import { authAPI } from '@/lib/api';
 import Button from '@/components/ui/Button';
@@ -15,13 +17,14 @@ const springTransition = { type: 'spring' as const, stiffness: 300, damping: 30 
 
 export default function AuthRegisterPage() {
   const router = useRouter();
-  const { setAuth, isLoading, setLoading } = useAuthStore();
+  const { setAuth } = useAuthStore();
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [role, setRole] = useState<'renter' | 'seller'>('renter');
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -29,7 +32,7 @@ export default function AuthRegisterPage() {
       toast.error('Please fill in all fields.');
       return;
     }
-    setLoading(true);
+    setIsSubmitting(true);
     try {
       const resp = await authAPI.register({ name: name.trim(), email: email.trim(), phone: phone.trim(), password, role });
       setAuth(resp.user, resp.access_token, resp.refresh_token);
@@ -38,12 +41,16 @@ export default function AuthRegisterPage() {
     } catch {
       toast.error('Registration failed. Please try again.');
     } finally {
-      setLoading(false);
+      setIsSubmitting(false);
     }
   };
 
-  const handleGoogleSuccess = async (credentialResponse: any) => {
-    setLoading(true);
+  const handleGoogleSuccess = async (credentialResponse: CredentialResponse) => {
+    if (!credentialResponse.credential) {
+      toast.error('Google sign-in failed. No credential received.');
+      return;
+    }
+    setIsSubmitting(true);
     try {
       const resp = await authAPI.googleLogin({
         credential: credentialResponse.credential,
@@ -52,11 +59,11 @@ export default function AuthRegisterPage() {
       setAuth(resp.user, resp.access_token, resp.refresh_token);
       toast.success(`Welcome to Kloset Luxe!`);
       router.push(role === 'seller' ? '/seller' : '/');
-    } catch (err: any) {
-      const msg = err?.response?.data?.error || 'Google sign-in failed. Please try again.';
-      toast.error(msg);
+    } catch (err: unknown) {
+      const msg = isAxiosError(err) ? err.response?.data?.error : 'Google sign-in failed. Please try again.';
+      toast.error(msg ?? 'Google sign-in failed. Please try again.');
     } finally {
-      setLoading(false);
+      setIsSubmitting(false);
     }
   };
 
@@ -116,8 +123,6 @@ export default function AuthRegisterPage() {
               <GoogleButton
                 onSuccess={handleGoogleSuccess}
                 onError={() => toast.error('Google sign-up failed.')}
-                variant="outline"
-                className="w-full h-14 cursor-pointer"
               />
             </div>
 
@@ -228,7 +233,7 @@ export default function AuthRegisterPage() {
               <Button
                 type="submit"
                 variant="primary"
-                isLoading={isLoading}
+                isLoading={isSubmitting}
                 className="w-full h-14 cursor-pointer"
               >
                 <ArrowRight size={16} className="mr-2" /> Create Account

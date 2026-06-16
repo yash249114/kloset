@@ -109,6 +109,7 @@ export interface Outfit {
   images: OutfitImage[];
   seller?: SellerInfo;
   is_wishlisted: boolean;
+  inventory_count?: number;
   created_at: string;
 }
 
@@ -231,6 +232,90 @@ export interface ReviewResponse {
   photos?: string;
   created_at: string;
   reviewer_name?: string;
+}
+
+// ─── Bank Account ────────────────────────────────────
+export interface BankAccount {
+  id: string;
+  user_id: string;
+  account_holder_name: string;
+  bank_name: string;
+  account_number: string;
+  ifsc_code: string;
+  is_verified: boolean;
+  is_default: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface BankAccountPayload {
+  account_holder_name: string;
+  bank_name: string;
+  account_number: string;
+  ifsc_code: string;
+  is_default?: boolean;
+}
+
+// ─── UPI ──────────────────────────────────────────────
+export interface UPIID {
+  id: string;
+  user_id: string;
+  upi_id: string;
+  is_verified: boolean;
+  is_default: boolean;
+  created_at: string;
+}
+
+export interface UPIIDPayload {
+  upi_id: string;
+  is_default?: boolean;
+}
+
+// ─── Inventory ─────────────────────────────────────────
+export type InventoryStatus = 'available' | 'reserved' | 'rented' | 'maintenance';
+
+export interface InventoryItem {
+  id: string;
+  outfit_id: string;
+  seller_id: string;
+  quantity_available: number;
+  quantity_reserved: number;
+  quantity_rented: number;
+  quantity_maintenance: number;
+  total_quantity: number;
+  status: InventoryStatus;
+  last_updated: string;
+}
+
+export interface InventoryUpdatePayload {
+  total_quantity: number;
+}
+
+// ─── Support Ticket ────────────────────────────────────
+export type TicketStatus = 'open' | 'in_progress' | 'resolved' | 'closed';
+
+export interface SupportTicket {
+  id: string;
+  user_id: string;
+  subject: string;
+  description: string;
+  status: TicketStatus;
+  priority: string;
+  created_at: string;
+  updated_at: string;
+  replies?: TicketReply[];
+}
+
+export interface TicketReply {
+  id: string;
+  ticket_id: string;
+  sender: string;
+  message: string;
+  created_at: string;
+}
+
+export interface TicketReplyPayload {
+  message: string;
 }
 
 // ─── Notification ────────────────────────────────────
