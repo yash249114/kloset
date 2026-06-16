@@ -35,8 +35,8 @@ npm-debug.log*
 # AI tooling
 .aider*
 
-# System-generated artifacts
-artifacts/
+# Archived artifacts
+_archive/
 
 # Cursor / IDE
 .cursor/

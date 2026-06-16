@@ -4,7 +4,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Send, RotateCcw, User, Bot } from 'lucide-react';
 import { useUIStore } from '@/store/useUIStore';
 import Drawer from '@/components/ui/Drawer';
-import client from '@/lib/api';
+import { client } from '@/lib/api';
 import { Z_INDEX } from '@/lib/constants';
 
 export interface ChatMessage {
@@ -89,7 +89,7 @@ export default function AIStylistDrawer() {
         history,
       });
 
-      const reply = res.data?.data?.reply ?? "I'm sorry, I couldn't process that. Would you like to raise a support ticket?";
+      const reply = res.data?.data?.reply || "I'm sorry, I couldn't process that. Would you like to raise a support ticket?";
       const botMsg: ChatMessage = { sender: 'bot', text: reply, timestamp };
       saveMessages([...updatedMessages, botMsg]);
     } catch (err) {
@@ -99,11 +99,7 @@ export default function AIStylistDrawer() {
       let replyText = "I'm sorry, I couldn't connect to the AI service right now. Would you like to raise a support ticket?";
       const lower = text.toLowerCase();
 
-      if (lower.includes('wedding') || lower.includes('bride') || lower.includes('groom') || lower.includes('wedding') || lower.includes('mumbai') || lower.includes('reception') || lower.includes('sangeet') || lower.includes('mehendi')) {
-        replyText = '🌸 **Wedding Collection Picks**: Browse our curated wedding edit — designer lehengas, embroidered sherwanis, and bridal sarees. [Browse Wedding Collection →](/discover?occasion=wedding)';
-      } else if (lower.includes('party') || lower.includes('cocktail') || lower.includes('engagement') || lower.includes('festival') || lower.includes('diwali')) {
-        replyText = '✨ **Party & Occasion Wear**: Check out our festive edit with sequin gowns, embroidered anarkalis, and indo-western fusion. [Browse Party Wear →](/discover?occasion=party)';
-      } else if (lower.includes('cancel') || lower.includes('cancellation')) {
+      if (lower.includes('cancel') || lower.includes('cancellation')) {
         replyText = '🌸 **Cancellation Policy**: You can cancel free of charge up to 7 days before your rental pick-up date! Within 7 days, a 50% cancellation fee is charged.';
       } else if (lower.includes('return') || lower.includes('policy') || lower.includes('pick')) {
         replyText = '📦 **Returns & Shipping**: We handle all return pickups! Please repack the outfit in the original Kloset zippered cover.';
@@ -113,8 +109,6 @@ export default function AIStylistDrawer() {
         replyText = '🛡️ **Damage Cover**: Normal wear and minor stains are covered! For significant damage, part of the security deposit may be withheld.';
       } else if (lower.includes('size') || lower.includes('fit') || lower.includes('tight')) {
         replyText = '👗 **Fittings & Exchange**: If the outfit does not fit, contact us immediately. We can dispatch a replacement or issue a 100% rental credit.';
-      } else if (lower.includes('outfit') || lower.includes('wear') || lower.includes('recommend') || lower.includes('suggest') || lower.includes('dress') || lower.includes('look')) {
-        replyText = '👘 **Style Recommendations**: Browse our catalog for designer outfits. Use filters for size, occasion, and price. [Discover Outfits →](/discover)';
       }
 
       const botMsg: ChatMessage = { sender: 'bot', text: replyText, timestamp };

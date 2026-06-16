@@ -26,7 +26,6 @@ export default function AdminSellersPage() {
   };
 
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
     loadSellers();
   }, []);
 

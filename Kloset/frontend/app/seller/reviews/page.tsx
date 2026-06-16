@@ -10,7 +10,7 @@ import Card from '@/components/ui/Card';
 export default function SellerReviewsPage() {
   const [reviews, setReviews] = useState<ReviewResponse[]>([]);
   const [loading, setLoading] = useState(true);
-  const [ratingSummary] = useState<{ avg: number; total: number; breakdown: Record<number, number> }>({ avg: 4.8, total: 24, breakdown: { 5: 18, 4: 4, 3: 2, 2: 0, 1: 0 } });
+  const [ratingSummary, setRatingSummary] = useState<{ avg: number; total: number; breakdown: Record<number, number> }>({ avg: 4.8, total: 24, breakdown: { 5: 18, 4: 4, 3: 2, 2: 0, 1: 0 } });
 
   useEffect(() => {
     const load = async () => {

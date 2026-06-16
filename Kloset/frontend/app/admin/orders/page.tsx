@@ -27,7 +27,6 @@ export default function AdminOrdersPage() {
     }
   };
 
-  // eslint-disable-next-line react-hooks/set-state-in-effect
   useEffect(() => { loadOrders(); }, []);
 
   const filteredOrders = query

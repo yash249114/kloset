@@ -1,0 +1,43 @@
+# ─── Kloset Frontend — Vercel Ignore ───
+# Files/dirs to exclude from Vercel build context
+
+# Backend
+backend/
+Kloset/backend/
+
+# Docker
+docker-compose.yml
+**/Dockerfile
+
+# Documentation
+*.md
+docs/
+stitch_marketplace/
+
+# CI/CD
+.github/
+
+# Dev tooling
+.cursor/
+.aider*
+.agents/
+
+# Duplicate project root
+Kloset/
+
+# Dev scripts and tests
+scripts/
+tests/
+test-results/
+public/e2e-report.json
+public/test-results.json
+
+# Audit files (not needed in production)
+audit.js
+audit2.js
+reports/
+skills-lock.json
+lint-output.txt
+
+# Dev logs
+*.log

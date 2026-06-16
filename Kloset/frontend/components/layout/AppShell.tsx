@@ -14,14 +14,13 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname() || '';
   const initializeAuth = useAuthStore((s) => s.initializeAuth);
 
-  useEffect(() => {
-    // Proactively load session tokens on mount
-    initializeAuth();
-  }, [initializeAuth]);
-
   const isAdminRoute = pathname.startsWith('/admin');
   const isSellerRoute = pathname.startsWith('/seller');
   const isAuthRoute = pathname.startsWith('/auth') || pathname.startsWith('/login') || pathname.startsWith('/register');
+
+  useEffect(() => {
+    initializeAuth();
+  }, [initializeAuth]);
 
   // 1. Admin Dark Mode Layout
   if (isAdminRoute) {

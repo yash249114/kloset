@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-require-imports */
 // Comprehensive audit script for Kloset platform
 // This script tests all pages, buttons, workflows, and routes
 

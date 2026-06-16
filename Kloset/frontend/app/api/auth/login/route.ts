@@ -18,9 +18,7 @@ export async function POST(request: Request) {
       id: 'usr_' + Math.random().toString(36).substr(2, 9),
       name: email.split('@')[0],
       email: email,
-      phone: '',
       role: 'renter' as const,
-      avatar_url: null,
       trust_score: 95,
       kyc_status: 'verified' as const,
       wallet_balance: 0,
@@ -30,11 +28,11 @@ export async function POST(request: Request) {
 
     // Generate mock JWT tokens
     const accessToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.' + 
-      Buffer.from(JSON.stringify({ sub: mockUser.id, email: mockUser.email, role: mockUser.role, exp: Date.now() + 3600000 })).toString('base64') +
+      btoa(JSON.stringify({ sub: mockUser.id, email: mockUser.email, role: mockUser.role, exp: Date.now() + 3600000 })) +
       '.mock_signature_' + Math.random().toString(36).substr(2, 9);
     
     const refreshToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.' +
-      Buffer.from(JSON.stringify({ sub: mockUser.id, type: 'refresh', exp: Date.now() + 604800000 })).toString('base64') +
+      btoa(JSON.stringify({ sub: mockUser.id, type: 'refresh', exp: Date.now() + 604800000 })) +
       '.mock_refresh_' + Math.random().toString(36).substr(2, 9);
 
     return NextResponse.json({

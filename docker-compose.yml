@@ -13,7 +13,7 @@ services:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
-      - ./backend/internal/database/migrations:/docker-entrypoint-initdb.d
+      - ./Kloset/backend/internal/database/migrations:/docker-entrypoint-initdb.d
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres"]
       interval: 5s
@@ -24,7 +24,7 @@ services:
   # Go Backend (development)
   backend:
     build:
-      context: ./backend
+      context: ./Kloset/backend
       dockerfile: Dockerfile
     container_name: kloset-api
     ports:
@@ -35,12 +35,12 @@ services:
       postgres:
         condition: service_healthy
     volumes:
-      - ./backend:/app
+      - ./Kloset/backend:/app
 
   # Next.js Frontend (development)
   frontend:
     build:
-      context: ./frontend
+      context: ./Kloset/frontend
       dockerfile: Dockerfile
     container_name: kloset-web
     ports:
@@ -50,7 +50,7 @@ services:
     depends_on:
       - backend
     volumes:
-      - ./frontend:/app
+      - ./Kloset/frontend:/app
       - /app/node_modules
 
 volumes:

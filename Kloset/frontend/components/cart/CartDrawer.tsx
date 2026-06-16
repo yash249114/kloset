@@ -2,7 +2,6 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
-import Image from 'next/image';
 import { ShoppingBag, Trash2, Calendar, Tag, Percent, ArrowRight } from 'lucide-react';
 import { useCartStore, calculateRentalDays } from '@/store/useCartStore';
 import { useUIStore } from '@/store/useUIStore';
@@ -108,7 +107,7 @@ export default function CartDrawer() {
                 >
                   {/* Media */}
                   <div className="w-16 h-20 relative rounded overflow-hidden bg-ivory-dark flex-shrink-0 border border-border">
-                    <Image src={item.image} alt={item.title} width={64} height={80} unoptimized className="w-full h-full object-cover" />
+                    <img src={item.image} alt={item.title} className="w-full h-full object-cover" />
                   </div>
 
                   {/* Details content */}

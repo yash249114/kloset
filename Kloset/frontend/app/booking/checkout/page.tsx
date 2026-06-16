@@ -3,7 +3,6 @@
 import React, { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
-import Image from 'next/image';
 import { motion } from 'framer-motion';
 import { Calendar, MapPin, ShieldCheck, CreditCard, ArrowLeft, Lock, Sparkles } from 'lucide-react';
 import { toast } from 'sonner';
@@ -35,6 +34,14 @@ function CheckoutContent() {
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
 
+  useEffect(() => {
+    if (!authLoading && !isAuthenticated) {
+      router.push(`/auth/login?redirect=/booking/checkout${outfitId ? `?outfit_id=${outfitId}` : ''}`);
+      return;
+    }
+    loadCheckoutData();
+  }, [isAuthenticated, authLoading]);
+
   const loadCheckoutData = async () => {
     setLoading(true);
     try {
@@ -60,31 +67,10 @@ function CheckoutContent() {
     }
   };
 
-  useEffect(() => {
-    if (!authLoading && !isAuthenticated) {
-      router.push(`/auth/login?redirect=/booking/checkout${outfitId ? `?outfit_id=${outfitId}` : ''}`);
-      return;
-    }
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    loadCheckoutData();
-  }, [isAuthenticated, authLoading, outfitId]);
-
   const handlePlaceOrder = async () => {
     if (!outfit) return;
     if (!startDate || !endDate) {
       toast.error('Please select rental dates.');
-      return;
-    }
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    const start = new Date(startDate);
-    const end = new Date(endDate);
-    if (start < today) {
-      toast.error('Pickup date cannot be in the past.');
-      return;
-    }
-    if (end <= start) {
-      toast.error('Return date must be after pickup date.');
       return;
     }
     if (deliveryType === 'delivery' && !selectedAddress) {
@@ -93,14 +79,13 @@ function CheckoutContent() {
     }
     setProcessing(true);
     try {
-      const selectedAddr = deliveryType === 'delivery' ? addresses.find((a) => a.id === selectedAddress) : undefined;
       const booking = await bookingsAPI.create({
         outfit_id: outfit.id,
         pickup_date: startDate,
         return_date: endDate,
         size_selected: selectedSize,
         delivery_type: deliveryType,
-        delivery_address: selectedAddr ? JSON.stringify(selectedAddr) : undefined,
+        delivery_address_id: deliveryType === 'delivery' ? selectedAddress : undefined,
       });
 
       const razorpayOrderId = booking.razorpay_order_id;
@@ -133,7 +118,7 @@ function CheckoutContent() {
       });
 
       if (result.status === 'success') {
-        const paymentResp = result.response as { razorpay_order_id: string; razorpay_payment_id: string; razorpay_signature: string };
+        const paymentResp = result.response as any;
         await paymentsAPI.verify({
           razorpay_order_id: razorpayOrderId,
           razorpay_payment_id: paymentResp.razorpay_payment_id,
@@ -204,7 +189,7 @@ function CheckoutContent() {
                 <Card padding="md" className="bg-white border-border">
                   <div className="flex gap-4">
                     <div className="w-24 h-32 rounded-lg overflow-hidden bg-ivory-dark flex-shrink-0">
-                       <Image src={outfit.images?.[0]?.url || ''} alt={outfit.title} width={80} height={107} unoptimized className="w-full h-full object-cover" />
+                      <img src={outfit.images?.[0]?.url || ''} alt={outfit.title} className="w-full h-full object-cover" />
                     </div>
                     <div>
                       <Badge variant="gold">{outfit.category}</Badge>

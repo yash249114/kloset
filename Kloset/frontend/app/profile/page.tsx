@@ -17,10 +17,11 @@ import {
 import { toast } from 'sonner';
 import { userAPI } from '@/lib/api';
 import { useAuthStore } from '@/store/useAuthStore';
-import type { Address, AddAddressPayload } from '@/types';
+import type { User, Address, AddAddressPayload } from '@/types';
 import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
 import Card from '@/components/ui/Card';
+import { ProfileSkeleton } from '@/components/ui/Skeleton';
 
 type ProfileTab = 'personal' | 'addresses' | 'business' | 'wallet';
 
@@ -32,9 +33,7 @@ export default function ProfilePage() {
 
   const [activeTab, setActiveTab] = useState<ProfileTab>('personal');
   const [profileLoading, setProfileLoading] = useState(true);
-  const [updatingPersonal, setUpdatingPersonal] = useState(false);
-  const [updatingBusiness, setUpdatingBusiness] = useState(false);
-  const [updatingAddress, setUpdatingAddress] = useState(false);
+  const [updating, setUpdating] = useState(false);
   const [addresses, setAddresses] = useState<Address[]>([]);
   
   // Personal Info Form
@@ -104,8 +103,8 @@ export default function ProfilePage() {
 
         const userAddresses = await userAPI.getAddresses();
         setAddresses(userAddresses);
-      } catch {
-        console.error('Failed to load profile details');
+      } catch (err) {
+        console.error('Failed to load profile details', err);
         toast.error('Failed to fetch profile settings from API.');
       } finally {
         setProfileLoading(false);
@@ -118,32 +117,32 @@ export default function ProfilePage() {
   const handleUpdatePersonal = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user) return;
-    setUpdatingPersonal(true);
+    setUpdating(true);
     try {
       await userAPI.updateProfile(personalForm);
       const updatedUser = { ...user, ...personalForm };
       setUser(updatedUser);
       toast.success('Personal profile details updated.');
-    } catch {
+    } catch (err) {
       toast.error('Failed to save profile changes.');
     } finally {
-      setUpdatingPersonal(false);
+      setUpdating(false);
     }
   };
 
   const handleUpdateBusiness = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user) return;
-    setUpdatingBusiness(true);
+    setUpdating(true);
     try {
       await userAPI.updateProfile(businessForm);
       const updatedUser = { ...user, ...businessForm };
       setUser(updatedUser);
       toast.success('Bespoke business settings updated.');
-    } catch {
-      toast.error('Failed to update profile.');
+    } catch (err) {
+      toast.error('Failed to save business settings.');
     } finally {
-      setUpdatingBusiness(false);
+      setUpdating(false);
     }
   };
 
@@ -153,11 +152,7 @@ export default function ProfilePage() {
       toast.error('Please fill in all address parameters.');
       return;
     }
-    if (!/^\d{6}$/.test(newAddress.pincode)) {
-      toast.error('Pincode must be a 6-digit number.');
-      return;
-    }
-    setUpdatingAddress(true);
+    setUpdating(true);
     try {
       const added = await userAPI.addAddress(newAddress);
       setAddresses([...addresses, added]);
@@ -171,20 +166,19 @@ export default function ProfilePage() {
         is_default: false,
       });
       toast.success('New delivery dispatch destination created.');
-    } catch {
-      toast.error('Failed to add address.');
+    } catch (err) {
+      toast.error('Failed to create address registry.');
     } finally {
-      setUpdatingAddress(false);
+      setUpdating(false);
     }
   };
 
   const handleDeleteAddress = async (id: string) => {
-    if (!confirm('Are you sure you want to remove this address?')) return;
     try {
       await userAPI.deleteAddress(id);
       setAddresses(addresses.filter((addr) => addr.id !== id));
       toast.success('Address removed from registry.');
-    } catch {
+    } catch (err) {
       toast.error('Failed to delete address.');
     }
   };
@@ -197,18 +191,13 @@ export default function ProfilePage() {
         is_default: addr.id === id,
       })));
       toast.success('Default delivery destination updated.');
-    } catch {
+    } catch (err) {
       toast.error('Failed to set default address.');
     }
   };
 
   if (authLoading || profileLoading) {
-    return (
-      <div className="bg-ivory min-h-screen pt-36 text-center select-none font-mono text-xs text-charcoal-light">
-        <div className="animate-spin inline-block w-6 h-6 border-2 border-champagne rounded-full border-t-transparent mb-2" />
-        <p>Loading Escrow Member Registry...</p>
-      </div>
-    );
+    return <ProfileSkeleton />;
   }
 
   return (
@@ -362,7 +351,7 @@ export default function ProfilePage() {
                         <Button
                           type="submit"
                           variant="primary"
-                          isLoading={updatingPersonal}
+                          isLoading={updating}
                           className="h-[52px] px-8 cursor-pointer"
                         >
                           <Check size={14} className="mr-2" /> Save Account Profile
@@ -468,7 +457,7 @@ export default function ProfilePage() {
                                 <Button
                                   type="submit"
                                   variant="primary"
-                                  isLoading={updatingAddress}
+                                  isLoading={updating}
                                   className="h-[52px] text-[10px] px-6"
                                 >
                                   Save Location
@@ -626,7 +615,7 @@ export default function ProfilePage() {
                         <Button
                           type="submit"
                           variant="primary"
-                          isLoading={updatingBusiness}
+                          isLoading={updating}
                           className="h-[52px] px-8 cursor-pointer"
                         >
                           <Check size={14} className="mr-2" /> Save Atelier Settings

@@ -23,7 +23,6 @@ export default function AdminSecurityPage() {
     }
   };
 
-  // eslint-disable-next-line react-hooks/set-state-in-effect
   useEffect(() => { loadLogs(); }, []);
 
   const springTransition = { type: 'spring' as const, stiffness: 300, damping: 30 };

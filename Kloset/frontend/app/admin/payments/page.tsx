@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { DollarSign, RefreshCcw } from 'lucide-react';
+import { DollarSign, RefreshCcw, CreditCard } from 'lucide-react';
 import { adminAPI } from '@/lib/api';
 import type { AdminTransactionEntry, AdminStats } from '@/lib/api';
 import Card from '@/components/ui/Card';
@@ -29,7 +29,6 @@ export default function AdminPaymentsPage() {
     }
   };
 
-  // eslint-disable-next-line react-hooks/set-state-in-effect
   useEffect(() => { loadPayments(); }, []);
 
   const springTransition = { type: 'spring' as const, stiffness: 300, damping: 30 };

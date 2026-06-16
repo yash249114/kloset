@@ -3,7 +3,6 @@
 import React, { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
-import Image from 'next/image';
 import { motion } from 'framer-motion';
 import { CheckCircle2, Calendar, MapPin, ArrowRight, Sparkles } from 'lucide-react';
 import { bookingsAPI } from '@/lib/api';
@@ -39,7 +38,6 @@ function ConfirmationContent() {
       router.push('/discover');
       return;
     }
-    // eslint-disable-next-line react-hooks/set-state-in-effect
     loadBooking();
   }, [bookingId]);
 
@@ -89,7 +87,7 @@ function ConfirmationContent() {
                 <div className="flex gap-4">
                   <div className="w-20 h-24 rounded-lg overflow-hidden bg-ivory-dark flex-shrink-0">
                     {booking.outfit?.images?.[0] ? (
-                      <Image src={booking.outfit.images[0].url} alt="" width={80} height={96} unoptimized className="w-full h-full object-cover" />
+                      <img src={booking.outfit.images[0].url} alt="" className="w-full h-full object-cover" />
                     ) : (
                       <div className="w-full h-full flex items-center justify-center text-[8px] text-charcoal-light/40">No Image</div>
                     )}

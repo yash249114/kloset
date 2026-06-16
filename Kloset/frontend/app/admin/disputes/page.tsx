@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Scale, RefreshCcw } from 'lucide-react';
+import { AlertCircle, Scale, RefreshCcw } from 'lucide-react';
 import { adminAPI, AdminDispute } from '@/lib/api';
 import Card from '@/components/ui/Card';
 import Badge from '@/components/ui/Badge';

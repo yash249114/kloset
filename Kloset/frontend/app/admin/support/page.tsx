@@ -39,7 +39,6 @@ export default function AdminSupportPage() {
     }
   };
 
-  // eslint-disable-next-line react-hooks/set-state-in-effect
   useEffect(() => { loadTickets(); }, []);
 
   const filteredTickets = query

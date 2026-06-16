@@ -50,8 +50,7 @@ export const calculateRentalDays = (start: string, end: string): number => {
   if (!start || !end) return 1;
   const sDate = new Date(start);
   const eDate = new Date(end);
-  if (eDate <= sDate) return 0;
-  const diffTime = eDate.getTime() - sDate.getTime();
+  const diffTime = Math.abs(eDate.getTime() - sDate.getTime());
   const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1; // inclusive of start/end
   return isNaN(diffDays) ? 1 : diffDays;
 };

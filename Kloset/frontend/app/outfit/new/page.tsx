@@ -3,7 +3,6 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import Image from 'next/image';
 import { motion } from 'framer-motion';
 import { Upload, X, ArrowLeft, Plus, Sparkles, Check } from 'lucide-react';
 import { toast } from 'sonner';
@@ -62,24 +61,18 @@ export default function NewOutfitPage() {
     }));
   };
 
-   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-     const files = e.target.files;
-     if (!files || files.length === 0) return;
-     const maxImages = 6;
-     const remaining = maxImages - uploadedImages.length;
-     if (remaining <= 0) {
-       toast.error(`Maximum of ${maxImages} images allowed.`);
-       return;
-     }
-     const fileArray = Array.from(files).slice(0, remaining);
-     for (const file of fileArray) {
-       const objectUrl = URL.createObjectURL(file);
-       setUploadedImages((prev) => [
-         ...prev,
-         { url: objectUrl, cloudinary_id: `temp_${Date.now()}`, is_primary: prev.length === 0, sort_order: prev.length },
-       ]);
-     }
-   };
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+    const fileArray = Array.from(files);
+    for (const file of fileArray) {
+      const objectUrl = URL.createObjectURL(file);
+      setUploadedImages((prev) => [
+        ...prev,
+        { url: objectUrl, cloudinary_id: `temp_${Date.now()}`, is_primary: prev.length === 0, sort_order: prev.length },
+      ]);
+    }
+  };
 
   const removeImage = (index: number) => {
     setUploadedImages((prev) => prev.filter((_, i) => i !== index));
@@ -203,7 +196,7 @@ export default function NewOutfitPage() {
               <div className="flex flex-wrap gap-4">
                 {uploadedImages.map((img, idx) => (
                   <div key={idx} className="relative w-28 h-36 rounded-lg overflow-hidden border border-border bg-ivory-dark group">
-                    <Image src={img.url} alt="" width={112} height={144} unoptimized className="w-full h-full object-cover" />
+                    <img src={img.url} alt="" className="w-full h-full object-cover" />
                     <button type="button" onClick={() => removeImage(idx)}
                       className="absolute top-1 right-1 p-1 bg-charcoal/60 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
                     >

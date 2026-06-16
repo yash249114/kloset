@@ -1,7 +1,6 @@
 'use client';
 
 import React, { useState, useRef } from 'react';
-import Image from 'next/image';
 import { Upload, X, Loader2 } from 'lucide-react';
 import { uploadImage, validateImageFile } from '@/lib/cloudinary';
 import { toast } from 'sonner';
@@ -156,7 +155,7 @@ export default function ImageUploader({
               key={img.cloudinary_id}
               className="aspect-square border border-border rounded-lg relative overflow-hidden group bg-ivory-dark"
             >
-              <Image src={img.url} alt="Listing thumbnail" width={200} height={200} unoptimized className="w-full h-full object-cover" />
+              <img src={img.url} alt="Listing thumbnail" className="w-full h-full object-cover" />
               
               {/* Overlays on Hover */}
               <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">

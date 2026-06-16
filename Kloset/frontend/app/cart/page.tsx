@@ -1,7 +1,6 @@
 'use client';
 
 import React from 'react';
-import Image from 'next/image';
 import { motion } from 'framer-motion';
 import { Trash2, ShoppingBag, ArrowRight } from 'lucide-react';
 import Link from 'next/link';
@@ -63,12 +62,9 @@ export default function CartPage() {
                 className="flex gap-4 p-4 bg-white border border-border rounded-xl"
               >
                 <div className="w-24 h-24 rounded-lg overflow-hidden flex-shrink-0">
-                  <Image
+                  <img
                     src={item.image}
                     alt={item.title}
-                    width={96}
-                    height={96}
-                    unoptimized
                     className="w-full h-full object-cover"
                   />
                 </div>

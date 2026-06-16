@@ -1,9 +1,8 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import Image from 'next/image';
 import { motion } from 'framer-motion';
-import { Search, RefreshCcw, Check, X } from 'lucide-react';
+import { Search, RefreshCcw, Check, X, Edit, Trash2, Eye } from 'lucide-react';
 import { adminAPI, AdminPendingOutfit } from '@/lib/api';
 import Card from '@/components/ui/Card';
 import Badge from '@/components/ui/Badge';
@@ -29,7 +28,6 @@ export default function AdminListingsPage() {
   };
 
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
     loadListings();
   }, []);
 
@@ -122,7 +120,7 @@ export default function AdminListingsPage() {
               >
                 <div className="flex items-center gap-4 flex-1 min-w-0">
                   <div className="w-16 h-20 rounded overflow-hidden bg-[#2A2A2A] flex-shrink-0">
-                     <Image src={listing.images[0]?.url || '/placeholder-outfit.jpg'} alt={listing.title} width={80} height={107} unoptimized className="w-full h-full object-cover" />
+                    <img src={listing.images[0]?.url || '/placeholder-outfit.jpg'} alt={listing.title} className="w-full h-full object-cover" />
                   </div>
                   <div className="space-y-1 min-w-0">
                     <h4 className="font-medium text-[#E8E8E8] truncate">{listing.title}</h4>

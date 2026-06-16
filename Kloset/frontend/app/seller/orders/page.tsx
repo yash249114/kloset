@@ -1,7 +1,6 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import Image from 'next/image';
 import { motion } from 'framer-motion';
 import { RefreshCcw, Calendar, Truck, Check } from 'lucide-react';
 import { bookingsAPI } from '@/lib/api';
@@ -115,7 +114,7 @@ export default function SellerOrdersPage() {
                 {/* Product/timeline description */}
                 <div className="flex flex-col sm:flex-row gap-4 items-center flex-1 text-center sm:text-left">
                   <div className="w-16 h-20 relative rounded overflow-hidden bg-ivory-dark border border-border flex-shrink-0">
-                    <Image src={outfitImg} alt={b.outfit?.title || 'Outfit'} width={64} height={80} unoptimized className="w-full h-full object-cover" />
+                    <img src={outfitImg} alt={b.outfit?.title || 'Outfit'} className="w-full h-full object-cover" />
                   </div>
                   <div className="space-y-1">
                     <div className="flex items-center gap-2 justify-center sm:justify-start">

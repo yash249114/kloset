@@ -48,7 +48,6 @@ export default function SupportPage() {
 
   useEffect(() => {
     if (!authLoading && !isAuthenticated) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
       loadPublicFaq();
       return;
     }

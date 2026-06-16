@@ -81,13 +81,31 @@ type UserResponse struct {
 	RentalPolicies      *string `json:"rental_policies"`
 }
 
-// SendOTPRequest represents the OTP send request payload
+// SendOTPRequest represents the OTP send request payload (phone-based)
 type SendOTPRequest struct {
 	Phone string `json:"phone" validate:"required,min=10,max=15"`
 }
 
-// VerifyOTPRequest represents the OTP verification request payload
+// VerifyOTPRequest represents the OTP verification request payload (phone-based)
 type VerifyOTPRequest struct {
 	Phone string `json:"phone" validate:"required,min=10,max=15"`
 	Code  string `json:"code" validate:"required,len=6"`
+}
+
+// SendEmailOTPRequest represents the email OTP send request payload
+type SendEmailOTPRequest struct {
+	Email string `json:"email" validate:"required,email"`
+}
+
+// VerifyEmailOTPRequest represents the email OTP verification request payload
+type VerifyEmailOTPRequest struct {
+	Email string `json:"email" validate:"required,email"`
+	Code  string `json:"code" validate:"required,len=6"`
+}
+
+// RegisterResponse is returned after successful registration (no tokens, needs OTP verification)
+type RegisterResponse struct {
+	User         UserResponse `json:"user"`
+	RequiresOTP  bool         `json:"requires_otp"`
+	Message      string       `json:"message"`
 }

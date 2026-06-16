@@ -422,3 +422,16 @@ func (s *Service) SendSupportTicketClosed(toEmail, name, ticketID string) error 
 	`, name, ticketID)
 	return s.send(toEmail, fmt.Sprintf("Support Ticket Closed: %s", ticketID), s.wrapTemplate("Support Ticket Closed", body))
 }
+
+func (s *Service) SendOTP(toEmail, otpCode string) error {
+	body := fmt.Sprintf(`
+		<h2>Your Verification Code</h2>
+		<p>Use this code to verify your email address:</p>
+		<div style="background-color:#fafaf8; border:2px dashed #c5a880; padding:24px; margin:24px 0; text-align:center; font-size:36px; letter-spacing:10px; font-weight:bold; color:#111; border-radius:4px;">
+			%s
+		</div>
+		<p>This code expires in 10 minutes. If you did not request this, you can ignore this email.</p>
+		<p style="font-size:12px; color:#888; margin-top:20px;">For security reasons, never share this code with anyone.</p>
+	`, otpCode)
+	return s.send(toEmail, "Verify Your Email Address", s.wrapTemplate("Verify Email", body))
+}

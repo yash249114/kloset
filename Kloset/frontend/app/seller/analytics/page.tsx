@@ -1,7 +1,6 @@
 'use client';
 
 import React, { useState, useEffect, useMemo } from 'react';
-import Image from 'next/image';
 import { motion } from 'framer-motion';
 import { TrendingUp, Calendar, Users, Eye, RefreshCcw } from 'lucide-react';
 import Card from '@/components/ui/Card';
@@ -262,12 +261,9 @@ export default function SellerAnalyticsPage() {
                       <div className="flex items-center gap-3">
                         <span className="font-mono text-champagne">#{i + 1}</span>
                         <div className="w-10 h-12 rounded overflow-hidden bg-ivory-dark flex-shrink-0">
-                          <Image
+                          <img
                             src={outfit.images?.[0]?.url || '/placeholder-outfit.jpg'}
                             alt={outfit.title}
-                            width={40}
-                            height={48}
-                            unoptimized
                             className="w-full h-full object-cover"
                           />
                         </div>

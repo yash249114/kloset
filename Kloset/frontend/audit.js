@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-require-imports */
 // Simple audit script for Kloset platform
 // This script checks for common issues without requiring browser automation
 

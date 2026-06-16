@@ -87,7 +87,7 @@ Ensure you update the following sections in your local `.env`:
 
 ### 1. Backend Service
 ```bash
-cd backend
+cd Kloset/backend
 # Create environment file and adjust values
 cp .env.example .env
 
@@ -102,7 +102,7 @@ The server will start listening on `http://localhost:8080`.
 
 ### 2. Frontend Application
 ```bash
-cd frontend
+cd Kloset/frontend
 # Configure frontend env variables
 cp .env.local.example .env.local
 
@@ -126,7 +126,7 @@ To run the database seeder:
 make seed
 
 # Or run directly
-cd backend && go run cmd/seed/main.go
+cd Kloset/backend && go run cmd/seed/main.go
 ```
 
 ### 👥 Demo Login Credentials

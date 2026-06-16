@@ -34,6 +34,7 @@ export default function PremiumCard({
   padding = 'md',
   hoverable = false,
   className = '',
+  asChild = false,
   style,
   ...props
 }: PremiumCardProps) {

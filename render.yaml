@@ -1,0 +1,107 @@
+# ─── Kloset Backend — Render Infrastructure as Code ───
+# Docs: https://render.com/docs/render.yaml
+# Usage: Connect repo in Render Dashboard → it auto-detects this file
+
+services:
+  # ─── Go API Server ───────────────────────────────────
+  - type: web
+    name: kloset-api
+    runtime: image
+    image:
+      url: # Leave blank — Render builds from Dockerfile
+    dockerfilePath: ./backend/Dockerfile
+    dockerContext: ./backend
+    env: production
+    region: oregon  # closest to Supabase ap-southeast-1 via VPN
+    plan: starter   # 512MB RAM, 0.5 CPU — scale up as needed
+    healthCheckPath: /health
+    healthCheckPolicy:
+      responseTimeout: 30
+    autoDeploy: true
+    branch: main
+    envVars:
+      # ─── Core ──────────────────────────────────────
+      - key: APP_ENV
+        value: production
+      - key: APP_PORT
+        value: 8080
+      - key: APP_URL
+        sync: false  # Set in dashboard: https://api.kloset.in
+      - key: FRONTEND_URL
+        sync: false  # Set in dashboard: https://kloset.in
+      - key: ALLOWED_ORIGINS
+        sync: false  # Set in dashboard: https://kloset.in
+      - key: LOG_LEVEL
+        value: warn
+
+      # ─── Database (Supabase) ───────────────────────
+      - key: DB_HOST
+        sync: false  # Set in dashboard
+      - key: DB_PORT
+        value: 6543
+      - key: DB_USER
+        sync: false  # Set in dashboard
+      - key: DB_PASSWORD
+        sync: false  # Set in dashboard
+      - key: DB_NAME
+        sync: false  # Set in dashboard
+      - key: DB_SSLMODE
+        value: require
+
+      # ─── JWT ────────────────────────────────────────
+      - key: JWT_SECRET
+        sync: false  # Set in dashboard (min 32 chars)
+      - key: JWT_ACCESS_EXPIRY
+        value: 15m
+      - key: JWT_REFRESH_EXPIRY
+        value: 720h
+
+      # ─── Cloudinary ─────────────────────────────────
+      - key: CLOUDINARY_CLOUD_NAME
+        sync: false
+      - key: CLOUDINARY_API_KEY
+        sync: false
+      - key: CLOUDINARY_API_SECRET
+        sync: false
+      - key: CLOUDINARY_UPLOAD_PRESET
+        value: kloset_uploads
+
+      # ─── Razorpay ───────────────────────────────────
+      - key: RAZORPAY_KEY_ID
+        sync: false  # Use rzp_live_ prefix
+      - key: RAZORPAY_KEY_SECRET
+        sync: false
+      - key: RAZORPAY_WEBHOOK_SECRET
+        sync: false
+
+      # ─── Resend (Email) ─────────────────────────────
+      - key: RESEND_API_KEY
+        sync: false
+      - key: RESEND_FROM_EMAIL
+        value: hello@kloset.in
+      - key: RESEND_FROM_NAME
+        value: Kloset
+
+      # ─── AI (Gemini) ────────────────────────────────
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: GEMINI_MODEL
+        value: gemini-1.5-flash
+
+      # ─── Google OAuth ───────────────────────────────
+      - key: GOOGLE_CLIENT_ID
+        sync: false
+
+      # ─── Sentry ─────────────────────────────────────
+      - key: SENTRY_DSN
+        sync: false
+
+      # ─── Platform ───────────────────────────────────
+      - key: PLATFORM_FEE_PERCENT
+        value: "5"
+      - key: MAX_IMAGES_PER_OUTFIT
+        value: "6"
+      - key: BOOKING_ACCEPT_WINDOW_HOURS
+        value: "24"
+      - key: SECURITY_DEPOSIT_REFUND_DAYS
+        value: "3"

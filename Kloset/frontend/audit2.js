@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-require-imports */
 // Comprehensive functional audit for Kloset platform
 // This script tests actual functionality using browser automation
 

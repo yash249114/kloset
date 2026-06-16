@@ -51,16 +51,11 @@ declare global {
   }
 }
 
-let razorpayLoadingPromise: Promise<boolean> | null = null;
-
 /**
  * Loads the Razorpay SDK script dynamically in the document.
- * Prevents duplicate script injections if called concurrently.
  */
 export function loadRazorpayScript(): Promise<boolean> {
-  if (razorpayLoadingPromise) return razorpayLoadingPromise;
-
-  razorpayLoadingPromise = new Promise((resolve) => {
+  return new Promise((resolve) => {
     if (typeof window === 'undefined') {
       resolve(false);
       return;
@@ -75,14 +70,9 @@ export function loadRazorpayScript(): Promise<boolean> {
     script.src = 'https://checkout.razorpay.com/v1/checkout.js';
     script.async = true;
     script.onload = () => resolve(true);
-    script.onerror = () => {
-      razorpayLoadingPromise = null;
-      resolve(false);
-    };
+    script.onerror = () => resolve(false);
     document.body.appendChild(script);
   });
-
-  return razorpayLoadingPromise;
 }
 
 /**

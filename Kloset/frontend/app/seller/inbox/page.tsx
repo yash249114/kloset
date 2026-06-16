@@ -65,7 +65,6 @@ export default function SellerInboxPage() {
       };
       init();
     } else {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
       setMessages([]);
     }
   }, [activeChat]);
