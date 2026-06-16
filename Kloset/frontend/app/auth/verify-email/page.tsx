@@ -72,7 +72,7 @@ function VerifyEmailForm() {
       }, 1500);
     } catch (err: unknown) {
       const msg = typeof err === 'object' && err !== null && 'response' in err
-        ? (err as any).response?.data?.error || 'Invalid code. Please try again.'
+        ? ((err as { response?: { data?: { error?: string } } }).response?.data?.error) || 'Invalid code. Please try again.'
         : 'Verification failed. Please try again.';
       toast.error(msg);
       setOtp(Array(6).fill(''));

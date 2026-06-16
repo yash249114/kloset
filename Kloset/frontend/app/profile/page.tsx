@@ -103,7 +103,7 @@ export default function ProfilePage() {
 
         const userAddresses = await userAPI.getAddresses();
         setAddresses(userAddresses);
-      } catch {
+      } catch (err) {
         console.error('Failed to load profile details', err);
         toast.error('Failed to fetch profile settings from API.');
       } finally {

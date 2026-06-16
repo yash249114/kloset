@@ -128,11 +128,11 @@ function CheckoutContent() {
       });
 
       if (result.status === 'success') {
-        const paymentResp = result.response as { razorpay_payment_id?: string; razorpay_signature?: string };
+        const paymentResp = result.response as unknown as Record<string, string>;
         await paymentsAPI.verify({
           razorpay_order_id: razorpayOrderId,
-          razorpay_payment_id: paymentResp.razorpay_payment_id,
-          razorpay_signature: paymentResp.razorpay_signature,
+          razorpay_payment_id: paymentResp.razorpay_payment_id ?? '',
+          razorpay_signature: paymentResp.razorpay_signature ?? '',
         });
         clearCart();
         toast.success('Payment confirmed! Booking is complete.');

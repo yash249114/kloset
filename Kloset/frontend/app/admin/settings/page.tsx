@@ -26,7 +26,8 @@ export default function AdminSettingsPage() {
   };
 
   useEffect(() => {
-    loadSettings();
+    const init = async () => { await loadSettings(); };
+    init();
   }, []);
 
   const handleSave = async (e: React.FormEvent) => {

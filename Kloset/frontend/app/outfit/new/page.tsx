@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
+import Image from 'next/image';
 import { Upload, X, ArrowLeft, Plus, Sparkles, Check } from 'lucide-react';
 import { toast } from 'sonner';
 import { outfitsAPI } from '@/lib/api';
@@ -196,7 +197,7 @@ export default function NewOutfitPage() {
               <div className="flex flex-wrap gap-4">
                 {uploadedImages.map((img, idx) => (
                   <div key={idx} className="relative w-28 h-36 rounded-lg overflow-hidden border border-border bg-ivory-dark group">
-                    <img src={img.url} alt="" className="w-full h-full object-cover" />
+                    <Image src={img.url} alt="" fill sizes="112px" className="object-cover" />
                     <button type="button" onClick={() => removeImage(idx)}
                       className="absolute top-1 right-1 p-1 bg-charcoal/60 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
                     >

@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
+import Image from 'next/image';
 import { 
   Calendar, 
   ChevronRight, 
@@ -284,11 +285,7 @@ export default function RenterOrdersPage() {
                     {/* Garment Image */}
                     <div className="w-full md:w-32 aspect-[3/4] rounded-lg border border-border overflow-hidden bg-ivory-dark flex-shrink-0 relative">
                       {booking.outfit?.images?.[0] ? (
-                        <img 
-                          src={booking.outfit.images[0].url} 
-                          alt="Garment Thumbnail" 
-                          className="w-full h-full object-cover"
-                        />
+                        <Image src={booking.outfit.images[0].url} alt="Garment Thumbnail" fill sizes="(max-width: 768px) 100vw, 128px" className="object-cover" />
                       ) : (
                         <div className="w-full h-full flex items-center justify-center text-[10px] font-mono text-charcoal-light/40">No Image</div>
                       )}

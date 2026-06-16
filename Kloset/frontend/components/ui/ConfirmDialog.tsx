@@ -33,7 +33,8 @@ export default function ConfirmDialog({
   const [mounted, setMounted] = React.useState(false);
 
   React.useEffect(() => {
-    setMounted(true);
+    const mount = () => { setMounted(true); };
+    void mount();
   }, []);
 
   if (!mounted) return null;

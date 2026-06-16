@@ -57,7 +57,7 @@ async function request(endpoint, method = 'GET', body = null, token = null) {
     if (text) {
       try {
         json = JSON.parse(text);
-      } catch (err) {
+      } catch {
         json = { rawText: text };
       }
     }
@@ -115,7 +115,6 @@ async function runE2E() {
   const pass = 'E2ETestPassword123!';
 
   let renterToken = null;
-  let renterId = null;
   let sellerToken = null;
   let sellerId = null;
   let adminToken = null;
@@ -285,7 +284,6 @@ async function runE2E() {
   });
   if (renterLogin.ok && renterLogin.data.success) {
     renterToken = renterLogin.data.data.access_token;
-    renterId = renterLogin.data.data.user.id;
     logTest('Renter Journey', 'Login Renter Account', true);
   } else {
     logTest('Renter Journey', 'Login Renter Account', false, JSON.stringify(renterLogin.data));
@@ -555,19 +553,19 @@ async function runE2E() {
     const r1 = await fetch('http://127.0.0.1:8080/health');
     healthzOk = r1.ok;
     healthStatusStr += `/health=${r1.status} `;
-  } catch(e) { healthStatusStr += `/health=error `; }
+  } catch { healthStatusStr += `/health=error `; }
 
   try {
     const r2 = await fetch('http://127.0.0.1:8080/healthz');
     healthzNewOk = r2.ok;
     healthStatusStr += `/healthz=${r2.status} `;
-  } catch(e) { healthStatusStr += `/healthz=error `; }
+  } catch { healthStatusStr += `/healthz=error `; }
 
   try {
     const r3 = await fetch('http://127.0.0.1:8080/readyz');
     readyzOk = r3.ok;
     healthStatusStr += `/readyz=${r3.status} `;
-  } catch(e) { healthStatusStr += `/readyz=error `; }
+  } catch { healthStatusStr += `/readyz=error `; }
 
   if (healthzOk && healthzNewOk && readyzOk) {
     logTest('Launch Infrastructure', 'Platform healthz & readyz check', true);

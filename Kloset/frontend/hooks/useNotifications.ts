@@ -28,7 +28,8 @@ export function useNotifications() {
   }, []);
 
   useEffect(() => {
-    fetchNotifications();
+    const init = async () => { await fetchNotifications(); };
+    init();
     intervalRef.current = setInterval(() => fetchNotifications(true), POLL_INTERVAL);
     return () => {
       if (intervalRef.current) clearInterval(intervalRef.current);

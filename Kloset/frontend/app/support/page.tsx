@@ -44,14 +44,16 @@ export default function SupportPage() {
 
   useEffect(() => {
     if (!authLoading && !isAuthenticated) {
-      setLoading(false);
+      const clear = () => { setLoading(false); };
+      void clear();
       return;
     }
   }, [isAuthenticated, authLoading]);
 
   useEffect(() => {
     if (isAuthenticated && !loading) {
-      loadTickets();
+      const init = async () => { await loadTickets(); };
+      init();
     }
   }, [isAuthenticated, loading]);
 

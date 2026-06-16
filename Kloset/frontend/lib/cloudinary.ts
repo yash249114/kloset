@@ -23,7 +23,7 @@ export async function uploadImage(
 ): Promise<CloudinaryUploadResult> {
   const formData = new FormData();
   formData.append('file', file);
-  formData.append('upload_preset', CLOUDINARY_UPLOAD_PRESET);
+  formData.append('upload_preset', process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET || '');
   formData.append('folder', folder);
 
   return new Promise((resolve, reject) => {
@@ -63,13 +63,13 @@ export async function uploadImage(
  */
 export function getOptimizedUrl(
   url: string,
-  _options: {
+  _options?: {
     width?: number;
     height?: number;
     quality?: number;
     format?: string;
     crop?: string;
-  } = {}
+  }
 ): string {
   return url;
 }
